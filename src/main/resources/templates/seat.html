@@ -238,7 +238,15 @@
 
         <div class="total-price">总价：<span class="price" id="totalPrice">0</span></div>
 
-        <div class="phone-info">手机号：150****6608</div>
+        <div class="phone-info">
+    		<span th:if="${session.userId == null}">
+        		<a href="javascript:void(0)" onclick="openLoginModal()"
+           		style="color:#1e3a8a;">请先登录</a>
+    		</span>
+    		<span th:if="${session.userId != null}">
+        		已登录：<span th:text="${session.username}">用户</span>
+    		</span>
+		</div>
 
         <button class="confirm-btn" id="confirmBtn" disabled>确认选座</button>
     </div>

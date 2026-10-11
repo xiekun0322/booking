@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿﻿<!DOCTYPE html>
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -11,7 +11,6 @@
     a { text-decoration: none; color: inherit; }
     ul, li { list-style: none; }
 
-    /* 顶部导航 */
     .top-nav { height: 80px; border-bottom: 1px solid #e5e5e5; display: flex;
                align-items: center; padding: 0 15%; position: sticky; top: 0;
                background: #fff; z-index: 100; }
@@ -37,7 +36,6 @@
     .dropdown-menu a { display: block; padding: 10px 20px; font-size: 14px; color: #333; }
     .dropdown-menu a:hover { background: #f5f5f5; color: #1e3a8a; }
 
-    /* Banner */
     .hero-banner { background: linear-gradient(135deg, #1e3a8a 0%, #152c6b 50%, #0f172a 100%);
                    color: #fff; padding: 60px 15%;
                    display: flex; justify-content: space-between; align-items: center; }
@@ -49,7 +47,6 @@
     .hero-btn:hover { transform: translateY(-2px); }
     .hero-emoji { font-size: 180px; opacity: 0.9; }
 
-    /* 主体 */
     .container { width: 1200px; margin: 30px auto 60px; display: flex; gap: 30px; }
     .main { flex: 1; min-width: 0; }
     .sidebar { width: 300px; flex-shrink: 0; }
@@ -63,7 +60,6 @@
     .section-title .more { margin-left: auto; font-size: 13px; color: #999; font-weight: normal; }
     .section-title .more:hover { color: #1e3a8a; }
 
-    /* 电影网格 */
     .movie-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
     .movie-card { cursor: pointer; transition: transform 0.2s; }
     .movie-card:hover { transform: translateY(-4px); }
@@ -78,7 +74,6 @@
                   display: flex; justify-content: space-between; }
     .movie-score { color: #ffb400; font-weight: bold; }
 
-    /* 侧边栏 */
     .side-card { background: #fff; border-radius: 8px; padding: 20px; margin-bottom: 20px;
                  box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
     .side-title { font-size: 16px; font-weight: bold; margin-bottom: 15px;
@@ -118,31 +113,10 @@
         <li><a th:href="@{/cinemas}">影院</a></li>
     </ul>
     <div class="nav-right">
-        <div th:if="${session.username == null}" class="user-area">
-            <a th:href="@{/login}"
-               style="color:#1e3a8a;font-weight:bold;font-size:14px;">
-                登录 / 注册
-            </a>
-        </div>
-        <div th:if="${session.username != null}" class="user-area">
-            <a th:href="@{/orders}" style="color:#1e3a8a;font-size:14px;">🎟️ 我的订单</a>
-            <div class="user-dropdown">
-                <span class="user-name">
-                    👤 <span th:text="${session.username}">用户名</span> ▼
-                </span>
-                <div class="dropdown-menu">
-                    <a th:href="@{/user/profile}">个人中心</a>
-                    <a th:href="@{/orders}">我的订单</a>
-                    <a th:href="@{/admin}">后台管理</a>
-                    <a href="javascript:void(0)" onclick="openBindModal()">绑定账号</a>
-                    <a href="javascript:void(0)" onclick="doLogout()">退出登录</a>
-                </div>
-            </div>
-        </div>
+        <div class="user-area"></div>
     </div>
 </header>
 
-<!-- Banner -->
 <div class="hero-banner">
     <div class="hero-text">
         <h1>星幕影票</h1>
@@ -155,7 +129,6 @@
 <div class="container">
     <main class="main">
 
-        <!-- 正在热映 -->
         <div class="section">
             <div class="section-title">
                 正在热映
@@ -182,7 +155,6 @@
             </div>
         </div>
 
-        <!-- 即将上映 -->
         <div class="section">
             <div class="section-title">
                 即将上映
@@ -259,24 +231,6 @@
 
 <div th:replace="~{fragments/login-modal :: modal}"></div>
 <div th:replace="~{fragments/login-modal :: bindModal}"></div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    if (typeof window.doLogout !== 'function') {
-        window.doLogout = function () {
-            if (!confirm('确定要退出登录吗？')) return;
-            fetch('/api/user/logout', { method: 'POST' })
-                .then(() => { window.location.href = '/'; })
-                .catch(() => { window.location.href = '/'; });
-        };
-    }
-    if (typeof window.openBindModal !== 'function') {
-        window.openBindModal = function () {
-            alert('绑定弹窗未加载');
-        };
-    }
-});
-</script>
 
 </body>
 </html>

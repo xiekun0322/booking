@@ -9,6 +9,7 @@ import com.starscreen.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,20 +34,32 @@ public class UserService {
         if (userRepository.existsByUsernameAndDeletedFalse(req.getUsername())) {
             throw new BusinessException("用户名已存在");
         }
-        if (req.getPhone() != null && !req.getPhone().isEmpty()
-                && userRepository.existsByPhoneAndDeletedFalse(req.getPhone())) {
+
+        // ★ 改动1：空字符串手机号统一转 null，避免唯一约束冲突
+        String phone = req.getPhone();
+        if (phone != null && phone.trim().isEmpty()) {
+            phone = null;
+        }
+
+        if (phone != null && userRepository.existsByPhoneAndDeletedFalse(phone)) {
             throw new BusinessException("手机号已存在");
         }
 
         User user = new User();
         user.setUsername(req.getUsername());
         user.setPassword(PASSWORD_ENCODER.encode(req.getPassword()));
-        user.setPhone(req.getPhone());
+        user.setPhone(phone);   // ★ 用处理后的 phone
         user.setCreateTime(LocalDateTime.now().format(DTF));
         user.setRole("USER");
         user.setDeleted(false);
 
-        user = userRepository.save(user);
+        // ★ 改动2：并发下唯一约束兜底，避免 500 "系统繁忙"
+        try {
+            user = userRepository.save(user);
+        } catch (DataIntegrityViolationException e) {
+            throw new BusinessException("用户名或手机号已被占用");
+        }
+
         log.info("用户注册成功：id={}, username={}", user.getId(), user.getUsername());
         return user;
     }
@@ -75,7 +88,8 @@ public class UserService {
     public User loginOrRegisterByPhone(String phone) {
         return userRepository.findByPhoneAndDeletedFalse(phone).orElseGet(() -> {
             User user = new User();
-            user.setUsername("用户" + phone.substring(7));
+            // ★ 改动3：用完整手机号，避免后4位相同导致 username 碰撞
+            user.setUsername("用户" + phone);
             user.setPassword("");
             user.setPhone(phone);
             user.setCreateTime(LocalDateTime.now().format(DTF));
@@ -127,35 +141,23 @@ public class UserService {
 
     // ==================== 修改密码 ====================
 
-    /**
-     * 【功能】修改密码。
-     * 【校验】
-     *   1. 用户存在
-     *   2. 已设置密码
-     *   3. 原密码正确
-     *   4. ★ 新密码不能与原密码相同
-     */
     @Transactional
     public void changePassword(Long userId, String oldPassword, String newPassword) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException("用户不存在"));
 
-        // 1. 是否设置过密码
         if (user.getPassword() == null || user.getPassword().isEmpty()) {
             throw new BusinessException("该账号未设置密码，请先绑定账号");
         }
 
-        // 2. 原密码是否正确
         if (!PASSWORD_ENCODER.matches(oldPassword, user.getPassword())) {
             throw new BusinessException("原密码错误");
         }
 
-        // 3. ★ 新密码不能与原密码相同
         if (PASSWORD_ENCODER.matches(newPassword, user.getPassword())) {
             throw new BusinessException("新密码不能与原密码相同");
         }
 
-        // 4. 更新密码
         user.setPassword(PASSWORD_ENCODER.encode(newPassword));
         userRepository.save(user);
         log.info("用户修改密码成功：id={}", userId);
@@ -168,10 +170,11 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException("用户不存在"));
 
-        if (user.getDeleted() != null && user.getDeleted()) {
+        if (Boolean.TRUE.equals(user.getDeleted())) {
             throw new BusinessException("该账号已注销");
         }
 
+        // ★ 保持原逻辑：有密码才校验，无密码跳过
         if (user.getPassword() != null && !user.getPassword().isEmpty()) {
             if (!PASSWORD_ENCODER.matches(password, user.getPassword())) {
                 throw new BusinessException("密码错误");

@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -88,7 +89,14 @@ public class PageController {
     @GetMapping("/cinemas/{movieId}")
     public String cinemas(@PathVariable Long movieId, Model model) {
         model.addAttribute("movie", movieRepository.findById(movieId).orElse(null));
-        model.addAttribute("schedules", scheduleRepository.findByMovieId(movieId));
+
+        // ★ 只显示今天及以后的场次
+        String today = LocalDate.now().toString();
+        List<Schedule> schedules = scheduleRepository.findByMovieId(movieId)
+                .stream()
+                .filter(s -> s.getDate() != null && s.getDate().compareTo(today) >= 0)
+                .toList();
+        model.addAttribute("schedules", schedules);
         return "cinemas";
     }
 
@@ -115,14 +123,14 @@ public class PageController {
         Long userId = (Long) session.getAttribute("userId");
         if (userId == null) {
             model.addAttribute("needLogin", true);
-            return "movie-order";
+            return "order-pay";
         }
         Order order = orderRepository.findById(id).orElse(null);
         if (order == null || !userId.equals(order.getUserId())) {
             return "redirect:/orders";
         }
         model.addAttribute("order", order);
-        return "movie-order";
+        return "order-pay";
     }
 
     // ==================== 我的订单 ====================
@@ -149,6 +157,11 @@ public class PageController {
     @GetMapping("/user/profile")
     public String userProfile() {
         return "user-profile";
+    }
+
+    @GetMapping("/user/security")
+    public String userSecurity() {
+        return "user-security";
     }
 
     // ==================== 后台 ====================
@@ -200,10 +213,5 @@ public class PageController {
     @GetMapping("/login")
     public String login() {
         return "login";
-    }
-    
-    @GetMapping("/user/security")
-    public String userSecurity() {
-        return "user-security";
     }
 }

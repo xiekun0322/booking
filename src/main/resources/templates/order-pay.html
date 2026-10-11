@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>订单支付 - 星幕影票</title>
+    <link rel="stylesheet" href="/css/login-modal.css">
+    <script src="/js/auth.js" defer></script>
+    <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Microsoft YaHei", Arial, sans-serif; background: #f5f5f5; color: #333; font-size: 14px; }
+    a { text-decoration: none; color: inherit; }
+
+    .top-nav { height: 80px; border-bottom: 1px solid #e5e5e5; display: flex;
+               align-items: center; padding: 0 15%; position: sticky; top: 0;
+               background: #fff; z-index: 100; }
+    .logo { display: flex; align-items: center; margin-right: 40px; }
+    .logo-icon { width: 40px; height: 40px; background: #1e3a8a; border-radius: 50%;
+                 color: #fff; display: flex; justify-content: center; align-items: center;
+                 font-weight: bold; font-size: 18px; margin-right: 10px; }
+    .logo-text { font-size: 20px; font-weight: bold; }
+    .main-menu { display: flex; height: 100%; }
+    .main-menu li a { display: flex; align-items: center; height: 80px;
+                      padding: 0 20px; font-size: 16px; color: #333; }
+    .main-menu li a:hover { color: #1e3a8a; }
+    .nav-right { margin-left: auto; display: flex; align-items: center; gap: 20px; }
+    .user-area { display: flex; align-items: center; gap: 20px; }
+    .user-dropdown { position: relative; cursor: pointer; }
+    .user-name { color: #333; font-size: 14px; }
+    .dropdown-menu { display: none; position: absolute; top: 100%; right: 0;
+                     background: #fff; border: 1px solid #e5e5e5; border-radius: 4px;
+                     box-shadow: 0 4px 12px rgba(0,0,0,0.08); min-width: 120px;
+                     padding: 8px 0; z-index: 1000; }
+    .user-dropdown:hover .dropdown-menu { display: block; }
+    .dropdown-menu a { display: block; padding: 10px 20px; font-size: 14px; color: #333; }
+    .dropdown-menu a:hover { background: #f5f5f5; color: #1e3a8a; }
+
+    .wrap { width: 900px; margin: 40px auto 60px; }
+
+    .order-card { background: #fff; border-radius: 8px; padding: 40px;
+                  box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .order-status { text-align: center; margin-bottom: 30px; }
+    .order-status .icon { font-size: 64px; margin-bottom: 12px; }
+    .order-status .text { font-size: 22px; font-weight: bold; color: #1e3a8a; }
+    .order-status .sub { font-size: 14px; color: #999; margin-top: 6px; }
+
+    .info-block { border-top: 1px dashed #e5e5e5; padding-top: 24px; margin-top: 24px; }
+    .info-row { display: flex; padding: 10px 0; font-size: 14px; }
+    .info-label { width: 100px; color: #999; }
+    .info-value { flex: 1; color: #333; }
+    .info-value.price { color: #1e3a8a; font-size: 20px; font-weight: bold; }
+
+    .ticket-box { margin-top: 24px; padding: 20px;
+                  background: #f0fff4; border: 1px dashed #43a047;
+                  border-radius: 8px; text-align: center; }
+    .ticket-label { font-size: 13px; color: #2e7d32; margin-bottom: 8px; }
+    .ticket-code { font-size: 32px; font-weight: bold; color: #2e7d32;
+                   letter-spacing: 6px; font-family: Consolas, monospace; }
+
+    .btn-row { display: flex; gap: 16px; margin-top: 30px; }
+    .btn { flex: 1; height: 50px; border: none; border-radius: 6px;
+           font-size: 16px; font-weight: bold; cursor: pointer; }
+    .btn-primary { background: #1e3a8a; color: #fff; }
+    .btn-primary:hover { background: #152c6b; }
+    .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+    .btn-ghost { background: #fff; color: #1e3a8a; border: 1px solid #1e3a8a; }
+    .btn-ghost:hover { background: #eef2ff; }
+
+    .footer { background: #262426; color: #999; padding: 40px 0;
+              font-size: 12px; line-height: 2; text-align: center; }
+    </style>
+</head>
+<body>
+
+<header class="top-nav">
+    <a th:href="@{/}" class="logo">
+        <div class="logo-icon">星</div>
+        <div class="logo-text">星幕影票</div>
+    </a>
+    <ul class="main-menu">
+        <li><a th:href="@{/}">首页</a></li>
+        <li><a th:href="@{/movies}">电影</a></li>
+        <li><a th:href="@{/cinemas}">影院</a></li>
+    </ul>
+    <div class="nav-right">
+        <div class="user-area"></div>
+    </div>
+</header>
+
+<div class="wrap" th:if="${needLogin}">
+    <div class="order-card" style="text-align:center;padding:80px 40px;">
+        <div style="font-size:64px;margin-bottom:20px;">🔒</div>
+        <div style="font-size:20px;font-weight:bold;margin-bottom:12px;">请先登录</div>
+        <div style="color:#999;margin-bottom:24px;">登录后即可查看订单信息</div>
+        <button class="btn btn-primary" style="max-width:200px;"
+                onclick="openLoginModal()">立即登录</button>
+    </div>
+</div>
+
+<div class="wrap" th:if="${order != null}">
+    <div class="order-card">
+
+        <!-- 状态区 -->
+        <div class="order-status">
+            <div class="icon" th:text="${order.status == 'paid' ? '✅' : (order.status == 'pending' ? '⏳' : '❌')}">⏳</div>
+            <div class="text"
+                 th:text="${order.status == 'paid' ? '支付成功' : (order.status == 'pending' ? '等待支付' : '订单已取消')}">
+                等待支付
+            </div>
+            <div class="sub" th:if="${order.status == 'pending'}">
+                请在 10 分钟内完成支付，超时自动取消
+            </div>
+        </div>
+
+        <!-- 订单信息 -->
+        <div class="info-block">
+            <div class="info-row">
+                <div class="info-label">订单号</div>
+                <div class="info-value" th:text="${order.orderNo}">MO...</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">电影</div>
+                <div class="info-value" th:text="${order.movieTitle}">电影名</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">影院</div>
+                <div class="info-value" th:text="${order.cinemaName} + ' · ' + ${order.hallName}">影院</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">场次</div>
+                <div class="info-value" th:text="${order.showTime}">时间</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">座位</div>
+                <div class="info-value" th:text="${order.seats}">座位</div>
+            </div>
+            <div class="info-row">
+                <div class="info-label">总价</div>
+                <div class="info-value price" th:text="'¥' + ${order.totalPrice}">0</div>
+            </div>
+        </div>
+
+        <!-- 已支付：取票码 -->
+        <div class="ticket-box" th:if="${order.status == 'paid'}">
+            <div class="ticket-label">取票码</div>
+            <div class="ticket-code" th:text="${order.ticketCode}">ABCD-1234</div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="btn-row" th:if="${order.status == 'pending'}">
+            <button class="btn btn-ghost" id="cancelBtn">取消订单</button>
+            <button class="btn btn-primary" id="payBtn">立即支付</button>
+        </div>
+        <div class="btn-row" th:if="${order.status == 'paid'}">
+            <a th:href="@{/orders}" class="btn btn-primary"
+               style="display:flex;align-items:center;justify-content:center;">查看我的订单</a>
+        </div>
+        <div class="btn-row" th:if="${order.status == 'cancelled'}">
+            <a th:href="@{/movies}" class="btn btn-primary"
+               style="display:flex;align-items:center;justify-content:center;">重新选座</a>
+        </div>
+
+    </div>
+</div>
+
+<footer class="footer">
+    <div>©2026 星幕影票 www.starscreen.com</div>
+</footer>
+
+<div th:replace="~{fragments/login-modal :: modal}"></div>
+<div th:replace="~{fragments/login-modal :: bindModal}"></div>
+
+<script th:inline="javascript">
+document.addEventListener('DOMContentLoaded', function () {
+    const orderId = /*[[${order != null ? order.id : 0}]]*/ 0;
+    const status = /*[[${order != null ? order.status : ''}]]*/ '';
+
+    const payBtn = document.getElementById('payBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    if (payBtn) {
+        payBtn.addEventListener('click', function () {
+            payBtn.disabled = true;
+            payBtn.textContent = '支付中...';
+            apiFetch('/api/orders/' + orderId + '/pay', { method: 'POST' })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.code !== 200) throw new Error(res.message);
+                    alert('支付成功！');
+                    window.location.reload();
+                })
+                .catch(err => {
+                    if (err && err.__needLogin) { payBtn.disabled = false; payBtn.textContent = '立即支付'; return; }
+                    alert(err.message || '支付失败');
+                    payBtn.disabled = false;
+                    payBtn.textContent = '立即支付';
+                });
+        });
+    }
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function () {
+            if (!confirm('确定要取消订单吗？')) return;
+            cancelBtn.disabled = true;
+            apiFetch('/api/orders/' + orderId + '/cancel', { method: 'POST' })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.code !== 200) throw new Error(res.message);
+                    alert('订单已取消');
+                    window.location.reload();
+                })
+                .catch(err => {
+                    if (err && err.__needLogin) { cancelBtn.disabled = false; return; }
+                    alert(err.message || '取消失败');
+                    cancelBtn.disabled = false;
+                });
+        });
+    }
+});
+</script>
+
+</body>
+</html>

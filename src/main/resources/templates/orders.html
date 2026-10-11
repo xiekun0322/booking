@@ -1,36 +1,10 @@
-﻿<!--
-  【模板】orders.html —— 我的订单页
-  【路由】GET /orders?status=paid&page=0&size=10
-  【渲染方】PageController.orders(status, page, size, model, session) → return "orders"
-
-  【Thymeleaf 变量】
-    - orderPage      Page<Order>  当前页订单数据
-                       .content         订单列表
-                       .totalPages      总页数
-                       .totalElements   总记录数
-                       .hasPrevious()   是否有上一页
-                       .hasNext()       是否有下一页
-                       .number          当前页码（从 0 开始）
-    - currentStatus  String       all / pending / paid / cancelled
-    - currentPage    int          当前页码
-
-  【鉴权】
-    PageController.orders 里：userId == null → redirect:/login
-    因此未登录用户看不到此页（LoginInterceptor 也拦截 /orders）
-
-  【内嵌 JS 调用】
-    - POST /api/user/logout   退出登录
-
-  【状态筛选】
-    顶部 4 个 tab 通过 <a th:href="@{/orders(status=...)}"> 触服务端渲染，
-    不是 AJAX 切换，每次点击会整页刷新。
--->
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>我的订单 - 星幕影票</title>
-    <link rel="stylesheet" href="/css/login-modal.css"> 
+    <link rel="stylesheet" href="/css/login-modal.css">
+    <script src="/js/auth.js" defer></script>
     <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: "Microsoft YaHei", Arial, sans-serif; background: #f5f5f5; color: #333; font-size: 14px; }
@@ -106,21 +80,22 @@
     </div>
     <ul class="main-menu">
         <li><a th:href="@{/}">首页</a></li>
-        <li><a th:href="@{/}">电影</a></li>
-        <li><a th:href="@{/}">影院</a></li>
+        <li><a th:href="@{/movies}">电影</a></li>
+        <li><a th:href="@{/cinemas}">影院</a></li>
     </ul>
     <div class="nav-right">
-        <div>📱 APP下载 ▼</div>
         <div th:if="${session.username == null}">
-            <a th:href="@{/login}" style="color:#1e3a8a; font-weight:bold;">登录 / 注册</a>
+            <a href="javascript:void(0)" onclick="openLoginModal()"
+               style="color:#1e3a8a; font-weight:bold;">登录 / 注册</a>
         </div>
         <div th:if="${session.username != null}" class="user-menu">
             <a th:href="@{/orders}"><span style="color:#1e3a8a;">🎟️ 我的订单</span></a>
             <div class="user-dropdown">
                 <span class="user-name">👤 <span th:text="${session.username}">用户名</span> ▼</span>
                 <div class="dropdown-menu">
+                    <a th:href="@{/user/profile}">个人中心</a>
                     <a th:href="@{/orders}">我的订单</a>
-                    <a href="javascript:void(0)" id="logoutBtn">退出登录</a>
+                    <a href="javascript:void(0)" onclick="doLogout()">退出登录</a>
                 </div>
             </div>
         </div>
@@ -130,79 +105,90 @@
 <div class="wrap">
     <div class="page-title">我的订单</div>
 
-    <!-- ===== 状态筛选 tab（服务端渲染，非 AJAX）===== -->
-    <!-- 点击后整页刷新，URL 带上 status 和 page=0 -->
-    <div class="status-tabs">
-        <a th:href="@{/orders(status='all', page=0)}"
-           class="status-tab"
-           th:classappend="${currentStatus == 'all' ? 'active' : ''}">全部</a>
-        <a th:href="@{/orders(status='pending', page=0)}"
-           class="status-tab"
-           th:classappend="${currentStatus == 'pending' ? 'active' : ''}">待支付</a>
-        <a th:href="@{/orders(status='paid', page=0)}"
-           class="status-tab"
-           th:classappend="${currentStatus == 'paid' ? 'active' : ''}">已支付</a>
-        <a th:href="@{/orders(status='cancelled', page=0)}"
-           class="status-tab"
-           th:classappend="${currentStatus == 'cancelled' ? 'active' : ''}">已取消</a>
+    <!-- ===== 未登录：提示登录 ===== -->
+    <div class="empty" th:if="${needLogin}">
+        <div style="font-size:64px;margin-bottom:16px;">🔒</div>
+        <div style="font-size:18px;font-weight:bold;margin-bottom:10px;color:#333;">请先登录</div>
+        <div style="margin-bottom:20px;">登录后即可查看您的订单</div>
+        <a href="javascript:void(0)" onclick="openLoginModal()"
+           style="display:inline-block;background:#1e3a8a;color:#fff;
+                  padding:10px 30px;border-radius:4px;">立即登录</a>
     </div>
 
-    <!-- ===== 无订单：空状态 ===== -->
-    <div class="empty" th:if="${orderPage == null or orderPage.isEmpty()}">
-        还没有订单，去 <a th:href="@{/}">首页</a> 选一部电影吧～
-    </div>
+    <!-- ===== 已登录才显示订单内容 ===== -->
+    <div th:unless="${needLogin}">
 
-    <!-- ===== 有订单：列表 ===== -->
-    <div th:if="${orderPage != null and !orderPage.isEmpty()}">
-        <div class="order-card" th:each="o : ${orderPage.content}">
-            <div class="order-left">
-                <div class="order-no">订单号：<span th:text="${o.orderNo}">MO...</span></div>
-                <div class="order-title" th:text="${o.movieTitle}">电影名</div>
-                <div class="order-meta">
-                    <div><span class="label">影院</span><span th:text="${o.cinemaName}">-</span> · <span th:text="${o.hallName}">-</span></div>
-                    <div><span class="label">场次</span><span th:text="${o.showTime}">-</span></div>
-                    <div><span class="label">座位</span><span th:text="${o.seats}">-</span></div>
+        <!-- 状态筛选 tab -->
+        <div class="status-tabs">
+            <a th:href="@{/orders(status='all', page=0)}"
+               class="status-tab"
+               th:classappend="${currentStatus == 'all' ? 'active' : ''}">全部</a>
+            <a th:href="@{/orders(status='pending', page=0)}"
+               class="status-tab"
+               th:classappend="${currentStatus == 'pending' ? 'active' : ''}">待支付</a>
+            <a th:href="@{/orders(status='paid', page=0)}"
+               class="status-tab"
+               th:classappend="${currentStatus == 'paid' ? 'active' : ''}">已支付</a>
+            <a th:href="@{/orders(status='cancelled', page=0)}"
+               class="status-tab"
+               th:classappend="${currentStatus == 'cancelled' ? 'active' : ''}">已取消</a>
+        </div>
+
+        <!-- 无订单：空状态 -->
+        <div class="empty" th:if="${orderPage == null or orderPage.isEmpty()}">
+            还没有订单，去 <a th:href="@{/}">首页</a> 选一部电影吧～
+        </div>
+
+        <!-- 有订单：列表 -->
+        <div th:if="${orderPage != null and !orderPage.isEmpty()}">
+            <div class="order-card" th:each="o : ${orderPage.content}">
+                <div class="order-left">
+                    <div class="order-no">订单号：<span th:text="${o.orderNo}">MO...</span></div>
+                    <div class="order-title" th:text="${o.movieTitle}">电影名</div>
+                    <div class="order-meta">
+                        <div><span class="label">影院</span><span th:text="${o.cinemaName}">-</span> · <span th:text="${o.hallName}">-</span></div>
+                        <div><span class="label">场次</span><span th:text="${o.showTime}">-</span></div>
+                        <div><span class="label">座位</span><span th:text="${o.seats}">-</span></div>
+                    </div>
+
+                    <div th:if="${o.status == 'paid'}" class="ticket-code-inline">
+                        取票码：<span th:text="${o.ticketCode}">ABCD-1234</span>
+                    </div>
                 </div>
 
-                <!-- 已支付：内联显示取票码 -->
-                <div th:if="${o.status == 'paid'}" class="ticket-code-inline">
-                    取票码：<span th:text="${o.ticketCode}">ABCD-1234</span>
+                <div class="order-right">
+                    <div class="order-price" th:text="${o.totalPrice}">0</div>
+
+                    <span class="status"
+                          th:classappend="${o.status}"
+                          th:text="${o.status == 'pending' ? '待支付' : (o.status == 'paid' ? '已支付' : '已取消')}">状态</span>
+
+                    <div>
+                        <a th:if="${o.status == 'pending'}" class="view-btn" th:href="@{/order/{id}(id=${o.id})}">去支付</a>
+                        <a th:if="${o.status == 'paid'}" class="view-btn" th:href="@{/order/{id}(id=${o.id})}">查看票券</a>
+                        <a th:if="${o.status == 'cancelled'}" class="view-btn ghost" th:href="@{/order/{id}(id=${o.id})}">查看详情</a>
+                    </div>
                 </div>
             </div>
 
-            <div class="order-right">
-                <div class="order-price" th:text="${o.totalPrice}">0</div>
+            <!-- 分页 -->
+            <div class="pagination" th:if="${orderPage.totalPages > 1}">
+                <a th:if="${orderPage.hasPrevious()}"
+                   th:href="@{/orders(status=${currentStatus}, page=${currentPage - 1})}">上一页</a>
+                <span th:if="${!orderPage.hasPrevious()}" class="disabled">上一页</span>
 
-                <!-- 状态标签：th:classappend 动态加类名 -->
-                <span class="status"
-                      th:classappend="${o.status}"
-                      th:text="${o.status == 'pending' ? '待支付' : (o.status == 'paid' ? '已支付' : '已取消')}">状态</span>
+                <span class="info">
+                    第 <span th:text="${orderPage.number + 1}">1</span> /
+                    <span th:text="${orderPage.totalPages}">1</span> 页
+                    （共 <span th:text="${orderPage.totalElements}">0</span> 条）
+                </span>
 
-                <!-- 按钮根据状态显示不同文案 -->
-                <div>
-                    <a th:if="${o.status == 'pending'}" class="view-btn" th:href="@{/order/{id}(id=${o.id})}">去支付</a>
-                    <a th:if="${o.status == 'paid'}" class="view-btn" th:href="@{/order/{id}(id=${o.id})}">查看票券</a>
-                    <a th:if="${o.status == 'cancelled'}" class="view-btn ghost" th:href="@{/order/{id}(id=${o.id})}">查看详情</a>
-                </div>
+                <a th:if="${orderPage.hasNext()}"
+                   th:href="@{/orders(status=${currentStatus}, page=${currentPage + 1})}">下一页</a>
+                <span th:if="${!orderPage.hasNext()}" class="disabled">下一页</span>
             </div>
         </div>
 
-        <!-- ===== 分页（服务端渲染）===== -->
-        <div class="pagination" th:if="${orderPage.totalPages > 1}">
-            <a th:if="${orderPage.hasPrevious()}"
-               th:href="@{/orders(status=${currentStatus}, page=${currentPage - 1})}">上一页</a>
-            <span th:if="${!orderPage.hasPrevious()}" class="disabled">上一页</span>
-
-            <span class="info">
-                第 <span th:text="${orderPage.number + 1}">1</span> /
-                <span th:text="${orderPage.totalPages}">1</span> 页
-                （共 <span th:text="${orderPage.totalElements}">0</span> 条）
-            </span>
-
-            <a th:if="${orderPage.hasNext()}"
-               th:href="@{/orders(status=${currentStatus}, page=${currentPage + 1})}">下一页</a>
-            <span th:if="${!orderPage.hasNext()}" class="disabled">下一页</span>
-        </div>
     </div>
 </div>
 
@@ -211,20 +197,26 @@
     <div>©2026 星幕影票 www.starscreen.com</div>
 </footer>
 
+<div th:replace="~{fragments/login-modal :: modal}"></div>
+<div th:replace="~{fragments/login-modal :: bindModal}"></div>
+
 <script>
-    // 退出登录
-    document.addEventListener('DOMContentLoaded', function () {
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', function () {
-                if (!confirm('确定要退出登录吗？')) return;
-                fetch('/api/user/logout', { method: 'POST' })
-                    .then(res => res.json())
-                    .then(() => { window.location.href = '/'; })
-                    .catch(() => { window.location.href = '/'; });
-            });
-        }
-    });
+document.addEventListener('DOMContentLoaded', function () {
+    // 退出登录兜底（auth.js 已提供 doLogout 时不重复定义）
+    if (typeof window.doLogout !== 'function') {
+        window.doLogout = function () {
+            if (!confirm('确定要退出登录吗？')) return;
+            fetch('/api/user/logout', { method: 'POST' })
+                .then(() => { window.location.href = '/'; })
+                .catch(() => { window.location.href = '/'; });
+        };
+    }
+    if (typeof window.openLoginModal !== 'function') {
+        window.openLoginModal = function () {
+            window.location.href = '/login';
+        };
+    }
+});
 </script>
 
 </body>
