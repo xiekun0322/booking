@@ -34,8 +34,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @Transactional
 class UserServiceTest {
 
-    /** 合规强密码：8 位，含大小写字母 + 数字 + 特殊字符 */
-    private static final String VALID_PWD = "Abc@1234";
+    /** 合规强密码：至少 8 位，含大小写字母 + 数字 + 特殊字符（仅测试用，勿使用真实密码） */
+    private static final String VALID_PWD = "Test@1234";
 
     /** 另一个合规强密码（用于"密码错误"场景） */
     private static final String ANOTHER_PWD = "Xyz#5678";
