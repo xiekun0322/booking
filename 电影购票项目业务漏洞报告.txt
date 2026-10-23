@@ -1,0 +1,85 @@
+星光影院系统：全维度代码审查与重构报告
+一、 财务与数据安全类
+财务级漏洞：金额精度丢失（Double） [entity/Order.java] -> 改用 BigDecimal
+
+欺诈级漏洞：零元购（缺失真实支付） [OrderService.pay()] -> 引入第三方异步回调
+
+数据泄露：Lombok 导致密码打日志 [User.java] -> 加 @ToString.Exclude
+
+业务死锁：软删除占用唯一索引 [User.java] -> 注销时重命名 username 腾出索引
+
+时间校验缺失：可购买“过去”的票 [OrderService.createOrder()] -> 增加放映时间与当前时间比对校验
+
+二、 并发与幂等性类（高危）
+并发覆盖：重复支付引发的“双花”攻击 [OrderService.pay()] -> 改为 UPDATE ... WHERE status='pending' 原子更新
+
+极端边界：支付超时与定时取消并发冲突 [pay() vs cancelExpiredOrders()] -> 引入延迟消息队列（MQ）+ 状态原子更新
+
+越权漏洞：伪造 userId 绕过校验 [OrderService.pay()/cancel()] -> 补充 userId == null 的拦截
+
+三、 性能与数据库类
+性能炸弹：定时任务全表扫描 OOM [cancelExpiredOrders()] -> 将时间过滤下推至 SQL 层
+
+性能瓶颈：循环更新引发的锁竞争 [pay()/releaseSeats()] -> 改用批量 Update SQL
+
+数据一致性：级联删除缺失（孤儿数据） [ScheduleService.delete()] -> 删除排期前先清理座位
+
+性能隐患：Java 内存过滤数据 [PageController] -> 交由数据库 WHERE date >= ? 过滤
+
+恶意请求：分页参数无上限 [AdminMovieController] -> 增加 @Max(100) 校验
+
+号段碰撞：订单号生成重复 [generateOrderNo()] -> 改用雪花算法 (Snowflake)
+
+字符串存时间：统计极易崩溃 [OrderRepository.dailyRevenue()] -> 改用 LocalDateTime 和 DATE() 函数
+
+四、 业务逻辑与参数校验类
+业务安全：黄牛占座攻击（库存耗尽） [OrderService.createOrder()] -> 限制单用户 pending 订单数 + 滑块验证码
+
+数据边界：重复座位提交 [createOrder()] -> 对 seatLabels 列表进行去重校验
+
+数据溢出：座位标签非法数字 [parseSeatLabel()] -> 正则限制最大长度（如两位数）+ try-catch
+
+空指针异常：价格数据缺失 [createOrder()] -> price != null ? price : 默认值 兜底
+
+状态滞后：Session 权限未同步 [AdminInterceptor] -> 敏感操作需在 Service 层查库验证实时状态
+
+测试后门：测试接口暴露 [TestController] -> 限制仅在 Dev 环境生效 (@Profile("dev"))
+
+裸奔接收：后台直接接收 Entity [AdminMovieController] -> 必须建立 DTO 并使用 @Valid 校验
+
+五、 Web 架构级安全评估（扩展审查）
+除了内部业务逻辑，本系统在 Web 架构安全方面呈现出“基础防御完善，但高级防护缺失”的状态：
+
+√ 已天然免疫或防范到位的点（亮点）
+SQL 注入（基本免疫）：系统底层全面使用 Spring Data JPA 的参数化查询，天然阻断了绝大多数的 SQL 注入攻击。
+
+敏感信息泄露（防范到位）：通过全局异常处理器（GlobalExceptionHandler）隐藏报错堆栈，通过视图对象（UserVO）剥离密码字段。
+
+垂直越权（防范到位）：后台接口通过 AdminInterceptor 严格校验了 role == 'ADMIN'，阻止了普通用户玩后台。
+
+文件上传漏洞（暂无风险）：当前系统未开放用户上传功能，不存在任意文件上传 getshell 风险。
+
+！ 真实存在的高危雷区
+CSRF（跨站请求伪造）
+
+现状：裸奔。系统完全依赖 Cookie/Session 鉴权，未引入 CSRF Token。
+
+修复：配置 Spring Security 开启 CSRF 防护，或设置 Cookie 的 SameSite=Strict 属性。
+
+接口重放攻击（Replay Attack）
+
+现状：裸奔。接口无防重机制，黑客抓包支付/下单请求后，可通过脚本疯狂重放。
+
+修复：在网关或拦截器层增加“时间戳 + Nonce 随机数”校验，配合 Redis 缓存防重。
+
+XSS（跨站脚本攻击）
+
+现状：存在隐患。若后台录入电影名/影评时未过滤恶意脚本，前端渲染若使用 th:utext 不转义，会导致 Cookie 被窃取。
+
+修复：前端使用 th:text 自动转义，后端使用 Jsoup 等工具过滤富文本 HTML 标签。
+
+Session 固定攻击（Session Fixation）
+
+现状：待排查。若登录成功后未销毁旧 Session 重建新 ID，黑客可预设 Session ID 实施劫持。
+
+修复：确保登录成功后调用 request.changeSessionId() 刷新会话。

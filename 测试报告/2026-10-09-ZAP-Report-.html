@@ -1,0 +1,2543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZAP by Checkmarx Scanning Report</title>
+<link
+	href="2026-10-09-ZAP-Report-/normalize/normalize.css" rel="stylesheet">
+<link
+	href="2026-10-09-ZAP-Report-/themes/original/main.css" rel="stylesheet">
+<link
+	href="2026-10-09-ZAP-Report-/themes/original/colors.css" rel="stylesheet">
+</head>
+<body>
+	<header>
+		<h1>ZAP by Checkmarx Scanning Report</h1>
+		<p>
+			<span>Generated with</span> <a href="https://zaproxy.org"><img
+				src="2026-10-09-ZAP-Report-/zap32x32.png" alt="The ZAP logo" class="zap-logo">ZAP</a>
+			<span>on 周五 9 10月 2026, at 13:59:47</span>
+		</p>
+		<p>ZAP 版本：2.17.0</p>
+		<p>
+			ZAP by <a href="https://checkmarx.com/">Checkmarx</a>
+		</p>
+	</header>
+
+	<main>
+
+		<section id="contents" class="contents">
+			<h2>Contents</h2>
+			<nav>
+				<ol>
+					<li><a
+						href="#about-this-report">About This Report</a>
+						<ol>
+							
+							<li><a
+								href="#report-parameters">Report Parameters</a></li>
+						</ol></li>
+					<data-th-block>
+					<li><a
+						href="#summaries">Summaries</a>
+						<ol>
+							<li><a
+								href="#risk-confidence-counts">Alert Counts by Risk and Confidence</a></li>
+							<li><a
+								href="#site-risk-counts">Alert Counts by Site and Risk</a></li>
+							<li><a
+								href="#alert-type-counts">Alert Counts by Alert Type</a></li>
+							<li><a
+								href="#insights">Insights</a></li>
+						</ol></li>
+					<li><a
+						href="#alerts">Alerts</a>
+						<ol>
+							
+							 
+							
+							
+							
+							
+							<li><a
+								href="#alerts--risk-2-confidence-3"><span>Risk</span>=<span
+									class="risk-level">中</span>, <span>Confidence</span>=<span
+									class="confidence-level">高</span> <span>(3)</span></a></li>
+							
+							
+							
+							
+							  
+							 
+							
+							
+							
+							
+							
+							
+							<li><a
+								href="#alerts--risk-0-confidence-2"><span>Risk</span>=<span
+									class="risk-level">信息提示</span>, <span>Confidence</span>=<span
+									class="confidence-level">中</span> <span>(2)</span></a></li>
+							
+							
+							  
+						</ol></li>
+					<li><a
+						href="#appendix">Appendix</a>
+						<ol>
+							<li><a
+								href="#alert-types">Alert Types</a></li>
+						</ol></li>
+					</data-th-block>
+				</ol>
+			</nav>
+		</section>
+
+		<section
+			id="about-this-report" class="about-this-report">
+			<h2>About This Report</h2>
+
+			
+
+			<section
+				id="report-parameters">
+				<h3>Report Parameters</h3>
+				<div class="report-parameters--container">
+					<h4>Contexts</h4>
+					
+					
+					<p>No contexts were selected, so all contexts were included by default.</p>
+					  
+
+					<h4>Sites</h4>
+					
+					<p>The following sites were included:</p>
+					<ul class="sites-list">
+						<li><span class="site">http://localhost:8080</span></li>
+					</ul>
+					
+					<p>(If no sites were selected, all sites were included by default.)</p>
+					<p>An included site must also be within one of the included contexts for its data to be included in the report.</p>
+
+					<h4>Risk levels</h4>
+					<p>
+						<span>Included</span>:
+						 
+						<span class="included-risk-codes"><span class="risk-level">高</span>, <span class="risk-level">中</span>, <span class="risk-level">低</span>, <span class="risk-level">信息提示</span></span>
+					</p>
+					<p>
+						<span>Excluded</span>:
+						 <span>None</span>
+						
+					</p>
+
+					<h4>Confidence levels</h4>
+					<p>
+						<span>Included</span>:
+						
+						
+						<span class="included-confidence-codes"><span class="confidence-level">用户已确认</span>, <span class="confidence-level">高</span>, <span class="confidence-level">中</span>, <span class="confidence-level">低</span></span>
+					</p>
+					<p>
+						<span>Excluded</span>:
+						
+						
+						<span class="included-confidence-codes"> <span class="confidence-level">用户已确认</span>, <span class="confidence-level">高</span>, <span class="confidence-level">中</span>, <span class="confidence-level">低</span>, <span class="confidence-level">误报</span></span>
+					</p>
+				</div>
+			</section>
+		</section>
+
+		
+		<section>
+			
+		</section>
+		
+		<section id="summaries" class="summaries">
+			<h2>Summaries</h2>
+
+			<section
+				id="risk-confidence-counts">
+				<h3>Alert Counts by Risk and Confidence</h3>
+				<table class="risk-confidence-counts-table">
+					<caption>
+						<p>This table shows the number of alerts for each level of risk and confidence included in the report.</p>
+						<p>(The percentages in brackets represent the count as a percentage of the total number of alerts included in the report, rounded to one decimal place.)</p>
+					</caption>
+					<colgroup>
+						<col>
+						<col>
+					</colgroup>
+					<colgroup>
+						<col
+							style="width: 14.0%"><col
+							style="width: 14.0%"><col
+							style="width: 14.0%"><col
+							style="width: 14.0%">
+						<col style="width: 14.0%">
+					</colgroup>
+					<thead>
+						<tr>
+							<td colspan="2" rowspan="2"></td>
+							<th scope="colgroup"
+								colspan="5">Confidence</th>
+						</tr>
+						<tr>
+							<th scope="col">用户已确认</th>
+							<th scope="col">高</th>
+							<th scope="col">中</th>
+							<th scope="col">低</th>
+							<th scope="col">Total</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<th scope="rowgroup"
+								rowspan="5">Risk</th>
+							<th scope="row">高</th>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span class="additional-info-percentages">(0.0%)</span></td>
+						</tr>
+						<tr>
+							
+							<th scope="row">中</th>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>3</span><br> <span
+								class="additional-info-percentages">(60.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>3</span><br> <span class="additional-info-percentages">(60.0%)</span></td>
+						</tr>
+						<tr>
+							
+							<th scope="row">低</th>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span class="additional-info-percentages">(0.0%)</span></td>
+						</tr>
+						<tr>
+							
+							<th scope="row">信息提示</th>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>2</span><br> <span
+								class="additional-info-percentages">(40.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>2</span><br> <span class="additional-info-percentages">(40.0%)</span></td>
+						</tr>
+						<tr>
+							<th scope="row">Total</th>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>3</span><br> <span
+								class="additional-info-percentages">(60.0%)</span></td>
+							<td><span>2</span><br> <span
+								class="additional-info-percentages">(40.0%)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0.0%)</span></td>
+							<td><span>5</span><br> <span
+								class="additional-info-percentages">(100%)</span></td>
+						</tr>
+					</tbody>
+				</table>
+			</section>
+
+			<section
+				id="site-risk-counts">
+				<h3>Alert Counts by Site and Risk</h3>
+				<table class="site-risk-counts-table">
+					<caption>
+						<p>This table shows, for each site for which one or more alerts were raised, the number of alerts raised at each risk level.</p>
+						<p>Alerts with a confidence level of &quot;False Positive&quot; have been excluded from these counts.</p>
+						<p>(The numbers in brackets are the number of alerts raised for the site at or above that risk level.)</p>
+					</caption>
+					<colgroup>
+						<col>
+						<col>
+					</colgroup>
+					<colgroup>
+						<col
+							style="width: 16.25%"><col
+							style="width: 16.25%"><col
+							style="width: 16.25%"><col
+							style="width: 16.25%">
+					</colgroup>
+					<thead>
+						<tr>
+							<td colspan="2" rowspan="2"></td>
+							<th scope="colgroup" colspan="4">Risk</th>
+						</tr>
+						<tr>
+							<th scope="col">
+								<span>高</span><br>  <span
+									class="additional-info-percentages">(= 高)</span>  
+							</th>
+							<th scope="col">
+								<span>中</span><br>   <span
+									class="additional-info-percentages">(&gt;= 中)</span> 
+							</th>
+							<th scope="col">
+								<span>低</span><br>   <span
+									class="additional-info-percentages">(&gt;= 低)</span> 
+							</th>
+							<th scope="col">
+								<span>信息提示</span><br>   <span
+									class="additional-info-percentages">(&gt;= 信息提示)</span> 
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<th scope="rowgroup"
+								rowspan="1">Site</th>
+							<th scope="row">http://localhost:8080</th>
+							
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(0)</span></td>
+							<td><span>3</span><br> <span
+								class="additional-info-percentages">(3)</span></td>
+							<td><span>0</span><br> <span
+								class="additional-info-percentages">(3)</span></td>
+							<td><span>2</span><br> <span
+								class="additional-info-percentages">(5)</span></td>
+							
+						</tr>
+					</tbody>
+				</table>
+			</section>
+
+			<section
+				id="alert-type-counts">
+				<h3>Alert Counts by Alert Type</h3>
+				<table class="alert-type-counts-table">
+					<caption>
+						<p>This table shows the number of alerts of each alert type, together with the alert type&#39;s risk level.</p>
+						<p>(The percentages in brackets represent each count as a percentage, rounded to one decimal place, of the total number of alerts included in this report.)</p>
+					</caption>
+					<thead>
+						<tr>
+							<th scope="col">Alert type</th>
+							<th scope="col">Risk</th>
+							<th scope="col">Count</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<th scope="row"><a
+								href="#alert-type-0">CSP: Failure to Define Directive with No Fallback</a></th>
+							<td class="risk-level">中</td>
+							<td><span>5</span><br> <span
+								class="additional-info-percentages">(100.0%)</span></td>
+						</tr>
+						<tr>
+							<th scope="row"><a
+								href="#alert-type-1">CSP: script-src 不安全-内联</a></th>
+							<td class="risk-level">中</td>
+							<td><span>5</span><br> <span
+								class="additional-info-percentages">(100.0%)</span></td>
+						</tr>
+						<tr>
+							<th scope="row"><a
+								href="#alert-type-2">CSP: style-src 不安全-内联</a></th>
+							<td class="risk-level">中</td>
+							<td><span>5</span><br> <span
+								class="additional-info-percentages">(100.0%)</span></td>
+						</tr>
+						<tr>
+							<th scope="row"><a
+								href="#alert-type-3">Information Disclosure - Suspicious Comments</a></th>
+							<td class="risk-level">信息提示</td>
+							<td><span>17</span><br> <span
+								class="additional-info-percentages">(340.0%)</span></td>
+						</tr>
+						<tr>
+							<th scope="row"><a
+								href="#alert-type-4">现代 Web 应用程序</a></th>
+							<td class="risk-level">信息提示</td>
+							<td><span>5</span><br> <span
+								class="additional-info-percentages">(100.0%)</span></td>
+						</tr>
+					</tbody>
+					<tfoot>
+						<tr>
+							<th scope="row">Total</th>
+							<td></td>
+							<td>5</td>
+						</tr>
+					</tfoot>
+				</table>
+			</section>
+			
+			<section
+				id="insights">
+				<h3 class="left-header">Insights</h3>
+				<table class="insights-table">
+						<caption>
+						<p>This table shows information that is likely to be very relevant to you, but which is not related to vulnerabilities, or potentially even related to the application in question.</p>
+					</caption>
+					<thead>
+					<tr>
+						<th scope="col">Level</th>
+						<th scope="col">Reason</th>
+						<th scope="col">Site</th>
+						<th scope="col">Description</th>
+						<th scope="col">Statistic</th>
+					</tr>
+					</thead>
+					<tbody>
+					
+						<tr>
+						<td class="risk-1">
+							<div>Low</div>
+						</td>
+						<td>
+							<div>Warning</div>
+						</td>
+						<td>
+							<div></div>
+						</td>
+						<td>
+							<div>ZAP errors logged - see the zap.log file for details</div>
+						</td>
+						<td align="center">
+							<div>2   </div>
+						</td>
+						</tr>
+					
+						<tr>
+						<td class="risk-1">
+							<div>Low</div>
+						</td>
+						<td>
+							<div>Warning</div>
+						</td>
+						<td>
+							<div></div>
+						</td>
+						<td>
+							<div>ZAP warnings logged - see the zap.log file for details</div>
+						</td>
+						<td align="center">
+							<div>41   </div>
+						</td>
+						</tr>
+					
+						<tr>
+						<td class="risk-0">
+							<div>Info</div>
+						</td>
+						<td>
+							<div>Informational</div>
+						</td>
+						<td>
+							<div></div>
+						</td>
+						<td>
+							<div>Percentage of network failures</div>
+						</td>
+						<td align="center">
+							<div>2 %</div>
+						</td>
+						</tr>
+					
+						<tr>
+						<td class="risk-0">
+							<div>Info</div>
+						</td>
+						<td>
+							<div>Informational</div>
+						</td>
+						<td>
+							<div>http://localhost:8080</div>
+						</td>
+						<td>
+							<div>Percentage of responses with status code 2xx</div>
+						</td>
+						<td align="center">
+							<div>95 %</div>
+						</td>
+						</tr>
+					
+						<tr>
+						<td class="risk-0">
+							<div>Info</div>
+						</td>
+						<td>
+							<div>Informational</div>
+						</td>
+						<td>
+							<div>http://localhost:8080</div>
+						</td>
+						<td>
+							<div>Percentage of responses with status code 4xx</div>
+						</td>
+						<td align="center">
+							<div>4 %</div>
+						</td>
+						</tr>
+					
+						<tr>
+						<td class="risk-0">
+							<div>Info</div>
+						</td>
+						<td>
+							<div>Informational</div>
+						</td>
+						<td>
+							<div>http://localhost:8080</div>
+						</td>
+						<td>
+							<div>Percentage of endpoints with content type text/html</div>
+						</td>
+						<td align="center">
+							<div>96 %</div>
+						</td>
+						</tr>
+					
+						<tr>
+						<td class="risk-0">
+							<div>Info</div>
+						</td>
+						<td>
+							<div>Informational</div>
+						</td>
+						<td>
+							<div>http://localhost:8080</div>
+						</td>
+						<td>
+							<div>Percentage of endpoints with method GET</div>
+						</td>
+						<td align="center">
+							<div>100 %</div>
+						</td>
+						</tr>
+					
+						<tr>
+						<td class="risk-0">
+							<div>Info</div>
+						</td>
+						<td>
+							<div>Informational</div>
+						</td>
+						<td>
+							<div>http://localhost:8080</div>
+						</td>
+						<td>
+							<div>Count of total endpoints</div>
+						</td>
+						<td align="center">
+							<div>113   </div>
+						</td>
+						</tr>
+					
+						<tr>
+						<td class="risk-0">
+							<div>Info</div>
+						</td>
+						<td>
+							<div>Informational</div>
+						</td>
+						<td>
+							<div>http://localhost:8080</div>
+						</td>
+						<td>
+							<div>Percentage of slow responses</div>
+						</td>
+						<td align="center">
+							<div>34 %</div>
+						</td>
+						</tr>
+					
+					</tbody>
+				</table>
+			</section>
+		</section>
+
+		<section id="alerts" class="alerts">
+			<h2>Alerts</h2>
+			<ol>
+				
+				 
+				 
+				
+				
+				<li id="alerts--risk-2-confidence-3">
+					<h3>
+						<span>Risk</span>=<span
+							class="risk-level">中</span>, <span>Confidence</span>=<span
+							class="confidence-level">高</span> <span>(3)</span>
+					</h3>
+					<ol>
+						
+						<li class="alerts--site-li">
+							<h4>
+								<span class="site">http://localhost:8080</span> <span>(3)</span>
+							</h4>
+							<ol>
+								
+								<li>
+									<h5>
+										<a
+											href="#alert-type-0">CSP: Failure to Define Directive with No Fallback</a> <span>(1)</span>
+									</h5>
+									<ol>
+										<li><details>
+												<summary>
+													<span class="request-method-n-url">GET http://localhost:8080/login</span>
+												</summary>
+												
+<table class="alerts-table">
+	<tr>
+		<th scope="row">Alert tags</th>
+		<td>
+			<ul class="alert-tags-list">
+				<li>
+					<span><a href="https://owasp.org/Top10/A05_2021-Security_Misconfiguration/">OWASP_2021_A05</a></span> 
+				</li>
+				<li>
+					 <span>POLICY_QA_STD = </span>
+				</li>
+				<li>
+					 <span>POLICY_PENTEST = </span>
+				</li>
+				<li>
+					<span><a href="https://www.zaproxy.org/docs/desktop/addons/common-library/alerttags/#systemic">SYSTEMIC</a></span> 
+				</li>
+				<li>
+					<span><a href="https://cwe.mitre.org/data/definitions/693.html">CWE-693</a></span> 
+				</li>
+				<li>
+					<span><a href="https://owasp.org/www-project-top-ten/2017/A6_2017-Security_Misconfiguration.html">OWASP_2017_A06</a></span> 
+				</li>
+				<li>
+					 <span>POLICY_DEV_STD = </span>
+				</li>
+			</ul>
+		</td>
+	</tr>
+	<tr>
+		<th scope="row">Alert description</th>
+		<td> 
+<p>The Content Security Policy fails to define one of the directives that has no fallback. Missing/excluding them is the same as allowing anything.</p>
+ </td>
+	</tr>
+	<tr>
+		<th scope="row">Other info</th>
+		<td> 
+<p>The directive(s): form-action is/are among the directives that do not fallback to default-src.</p>
+ </td>
+	</tr>
+	<tr>
+		<th scope="row">Request</th>
+		<td><details open="open">
+				<summary>Request line and header section (267 bytes)</summary>
+				
+				<pre><code>GET http://localhost:8080/login HTTP/1.1
+host: localhost:8080
+user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36
+pragma: no-cache
+cache-control: no-cache
+referer: http://localhost:8080/
+
+</code></pre>
+				
+				
+			</details> <details class="request-body" open="open">
+				<summary>Request body (0 bytes)</summary>
+				
+				<pre><code></code></pre>
+				
+				
+			</details></td>
+	</tr>
+	<tr>
+		<th scope="row">Response</th>
+		<td><details open="open">
+				<summary>Status line and header section (572 bytes)</summary>
+				
+				<pre><code>HTTP/1.1 200
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Content-Security-Policy: default-src &#39;self&#39;; img-src &#39;self&#39; data:; style-src &#39;self&#39; &#39;unsafe-inline&#39;; script-src &#39;self&#39; &#39;unsafe-inline&#39;; font-src &#39;self&#39; data:; connect-src &#39;self&#39;; frame-ancestors &#39;none&#39;
+X-XSS-Protection: 1; mode=block
+Referrer-Policy: strict-origin-when-cross-origin
+Vary: origin,access-control-request-method,access-control-request-headers,accept-encoding
+Content-Type: text/html;charset=UTF-8
+Content-Language: zh-CN
+Date: Fri, 09 Oct 2026 05:57:08 GMT
+content-length: 6579
+
+</code></pre>
+				
+				
+			</details> <details class="response-body">
+				<summary>Response body (6579 bytes)</summary>
+				
+				<pre><code>&lt;script&gt;
+document.addEventListener(&#39;DOMContentLoaded&#39;, function () {
+    const tabSms = document.getElementById(&#39;tabSms&#39;);
+    const tabPwd = document.getElementById(&#39;tabPwd&#39;);
+    const panelSms = document.getElementById(&#39;panelSms&#39;);
+    const panelPwd = document.getElementById(&#39;panelPwd&#39;);
+    const msgBox = document.getElementById(&#39;msgBox&#39;);
+
+    const smsPhone = document.getElementById(&#39;smsPhone&#39;);
+    const smsCode = document.getElementById(&#39;smsCode&#39;);
+    const sendCodeBtn = document.getElementById(&#39;sendCodeBtn&#39;);
+    const smsLoginBtn = document.getElementById(&#39;smsLoginBtn&#39;);
+
+    const pwdUsername = document.getElementById(&#39;pwdUsername&#39;);
+    const pwdPassword = document.getElementById(&#39;pwdPassword&#39;);
+    const pwdLoginBtn = document.getElementById(&#39;pwdLoginBtn&#39;);
+
+    let countdown = 0;
+    let timer = null;
+
+    function showMsg(text, type) {
+        msgBox.textContent = text;
+        msgBox.className = &#39;msg &#39; + type;
+    }
+    function hideMsg() { msgBox.className = &#39;msg&#39;; }
+
+    // Tab
+    tabSms.addEventListener(&#39;click&#39;, function () {
+        tabSms.classList.add(&#39;active&#39;); tabPwd.classList.remove(&#39;active&#39;);
+        panelSms.classList.add(&#39;active&#39;); panelPwd.classList.remove(&#39;active&#39;);
+        hideMsg();
+    });
+    tabPwd.addEventListener(&#39;click&#39;, function () {
+        tabPwd.classList.add(&#39;active&#39;); tabSms.classList.remove(&#39;active&#39;);
+        panelPwd.classList.add(&#39;active&#39;); panelSms.classList.remove(&#39;active&#39;);
+        hideMsg();
+    });
+
+    // 手机验证码
+    function checkSendBtn() {
+        const phone = smsPhone.value.trim();
+        const valid = /^1[3-9]\d{9}$/.test(phone);
+        sendCodeBtn.disabled = !(valid &amp;&amp; countdown === 0);
+        sendCodeBtn.textContent = countdown &gt; 0 ? (countdown + &#39; 秒后重发&#39;) : &#39;发送验证码&#39;;
+    }
+    function checkSmsLoginBtn() {
+        const vp = /^1[3-9]\d{9}$/.test(smsPhone.value.trim());
+        const vc = /^\d{6}$/.test(smsCode.value.trim());
+        smsLoginBtn.disabled = !(vp &amp;&amp; vc);
+    }
+    smsPhone.addEventListener(&#39;input&#39;, function () { checkSendBtn(); checkSmsLoginBtn(); });
+    smsCode.addEventListener(&#39;input&#39;, checkSmsLoginBtn);
+    checkSendBtn();
+    checkSmsLoginBtn();
+
+    // ★ 发送验证码：后端返回 code → alert 显示 → 自动填入
+    sendCodeBtn.addEventListener(&#39;click&#39;, function () {
+        const phone = smsPhone.value.trim();
+        if (!/^1[3-9]\d{9}$/.test(phone)) { showMsg(&#39;请输入正确的手机号&#39;, &#39;error&#39;); return; }
+        sendCodeBtn.disabled = true;
+
+        fetch(&#39;/api/user/send-sms&#39;, {
+            method: &#39;POST&#39;,
+            headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+            body: JSON.stringify({ phone: phone })
+        })
+        .then(r =&gt; r.json())
+        .then(result =&gt; {
+            if (result.code !== 200) throw new Error(result.message);
+            const code = result.data;
+
+            // ★ 弹窗显示
+            alert(&#39;【演示环境】\n您的验证码是：&#39; + code + &#39;\n\n已自动填入。&#39;);
+            smsCode.value = code;
+            checkSmsLoginBtn();
+
+            countdown = 60;
+            checkSendBtn();
+            timer = setInterval(function () {
+                countdown--;
+                checkSendBtn();
+                if (countdown &lt;= 0) { clearInterval(timer); checkSendBtn(); }
+            }, 1000);
+        })
+        .catch(err =&gt; {
+            showMsg(err.message || &#39;发送失败&#39;, &#39;error&#39;);
+            sendCodeBtn.disabled = false;
+            checkSendBtn();
+        });
+    });
+
+    // 短信登录
+    smsLoginBtn.addEventListener(&#39;click&#39;, doSmsLogin);
+    function doSmsLogin() {
+        const phone = smsPhone.value.trim();
+        const code = smsCode.value.trim();
+        if (!/^1[3-9]\d{9}$/.test(phone)) { showMsg(&#39;请输入正确的手机号&#39;, &#39;error&#39;); return; }
+        if (!/^\d{6}$/.test(code)) { showMsg(&#39;请输入 6 位验证码&#39;, &#39;error&#39;); return; }
+
+        smsLoginBtn.disabled = true;
+        smsLoginBtn.textContent = &#39;登录中...&#39;;
+
+        fetch(&#39;/api/user/login-sms&#39;, {
+            method: &#39;POST&#39;,
+            headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+            body: JSON.stringify({ phone: phone, code: code })
+        })
+        .then(r =&gt; r.json())
+        .then(result =&gt; {
+            if (result.code !== 200) throw new Error(result.message);
+            showMsg(&#39;登录成功，跳转中...&#39;, &#39;success&#39;);
+            setTimeout(() =&gt; {
+                const back = sessionStorage.getItem(&#39;loginBack&#39;) || &#39;/&#39;;
+                sessionStorage.removeItem(&#39;loginBack&#39;);
+                window.location.href = back;
+            }, 700);
+        })
+        .catch(err =&gt; {
+            showMsg(err.message || &#39;登录失败&#39;, &#39;error&#39;);
+            smsLoginBtn.disabled = false;
+            smsLoginBtn.textContent = &#39;登录 / 注册&#39;;
+            checkSmsLoginBtn();
+        });
+    }
+
+    // 账号密码
+    function checkPwdLoginBtn() {
+        const u = pwdUsername.value.trim();
+        const p = pwdPassword.value.trim();
+        pwdLoginBtn.disabled = !(u &amp;&amp; p);
+    }
+    pwdUsername.addEventListener(&#39;input&#39;, checkPwdLoginBtn);
+    pwdPassword.addEventListener(&#39;input&#39;, checkPwdLoginBtn);
+    checkPwdLoginBtn();
+
+    pwdLoginBtn.addEventListener(&#39;click&#39;, function () {
+        const username = pwdUsername.value.trim();
+        const password = pwdPassword.value.trim();
+        if (!username || !password) { showMsg(&#39;请填写用户名和密码&#39;, &#39;error&#39;); return; }
+
+        pwdLoginBtn.disabled = true;
+        pwdLoginBtn.textContent = &#39;登录中...&#39;;
+
+        fetch(&#39;/api/user/login&#39;, {
+            method: &#39;POST&#39;,
+            headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+            body: JSON.stringify({ username: username, password: password })
+        })
+        .then(r =&gt; r.json())
+        .then(result =&gt; {
+            if (result.code !== 200) throw new Error(result.message);
+            showMsg(&#39;登录成功，跳转中...&#39;, &#39;success&#39;);
+            setTimeout(() =&gt; {
+                const back = sessionStorage.getItem(&#39;loginBack&#39;) || &#39;/&#39;;
+                sessionStorage.removeItem(&#39;loginBack&#39;);
+                window.location.href = back;
+            }, 700);
+        })
+        .catch(err =&gt; {
+            showMsg(err.message || &#39;登录失败&#39;, &#39;error&#39;);
+            pwdLoginBtn.disabled = false;
+            pwdLoginBtn.textContent = &#39;登录&#39;;
+            checkPwdLoginBtn();
+        });
+    });
+});
+&lt;/script&gt;</code></pre>
+				
+				
+			</details></td>
+	</tr>
+	<tr>
+		<th scope="row">Parameter</th>
+		<td><pre><code>Content-Security-Policy</code></pre></td>
+	</tr>
+	
+	<tr>
+		<th scope="row">Evidence</th>
+		<td><pre><code>default-src &#39;self&#39;; img-src &#39;self&#39; data:; style-src &#39;self&#39; &#39;unsafe-inline&#39;; script-src &#39;self&#39; &#39;unsafe-inline&#39;; font-src &#39;self&#39; data:; connect-src &#39;self&#39;; frame-ancestors &#39;none&#39;</code></pre></td>
+	</tr>
+	<tr>
+		<th scope="row">Solution</th>
+		<td> 
+<p>Ensure that your web server, application server, load balancer, etc. is properly configured to set the Content-Security-Policy header.</p>
+ </td>
+	</tr>
+</table>
+
+											</details></li>
+									</ol>
+								</li>
+								
+								<li>
+									<h5>
+										<a
+											href="#alert-type-1">CSP: script-src 不安全-内联</a> <span>(1)</span>
+									</h5>
+									<ol>
+										<li><details>
+												<summary>
+													<span class="request-method-n-url">GET http://localhost:8080/login</span>
+												</summary>
+												
+<table class="alerts-table">
+	<tr>
+		<th scope="row">Alert tags</th>
+		<td>
+			<ul class="alert-tags-list">
+				<li>
+					<span><a href="https://owasp.org/Top10/A05_2021-Security_Misconfiguration/">OWASP_2021_A05</a></span> 
+				</li>
+				<li>
+					 <span>POLICY_QA_STD = </span>
+				</li>
+				<li>
+					 <span>POLICY_PENTEST = </span>
+				</li>
+				<li>
+					<span><a href="https://www.zaproxy.org/docs/desktop/addons/common-library/alerttags/#systemic">SYSTEMIC</a></span> 
+				</li>
+				<li>
+					<span><a href="https://cwe.mitre.org/data/definitions/693.html">CWE-693</a></span> 
+				</li>
+				<li>
+					<span><a href="https://owasp.org/www-project-top-ten/2017/A6_2017-Security_Misconfiguration.html">OWASP_2017_A06</a></span> 
+				</li>
+				<li>
+					 <span>POLICY_DEV_STD = </span>
+				</li>
+			</ul>
+		</td>
+	</tr>
+	<tr>
+		<th scope="row">Alert description</th>
+		<td> 
+<p>Content Security Policy (CSP) is an added layer of security that helps to detect and mitigate certain types of attacks. Including (but not limited to) Cross Site Scripting (XSS), and data injection attacks. These attacks are used for everything from data theft to site defacement or distribution of malware. CSP provides a set of standard HTTP headers that allow website owners to declare approved sources of content that browsers should be allowed to load on that page — covered types are JavaScript, CSS, HTML frames, fonts, images and embeddable objects such as Java applets, ActiveX, audio and video files.</p>
+ </td>
+	</tr>
+	<tr>
+		<th scope="row">Other info</th>
+		<td> 
+<p>script-src includes unsafe-inline.</p>
+ </td>
+	</tr>
+	<tr>
+		<th scope="row">Request</th>
+		<td><details open="open">
+				<summary>Request line and header section (267 bytes)</summary>
+				
+				<pre><code>GET http://localhost:8080/login HTTP/1.1
+host: localhost:8080
+user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36
+pragma: no-cache
+cache-control: no-cache
+referer: http://localhost:8080/
+
+</code></pre>
+				
+				
+			</details> <details class="request-body" open="open">
+				<summary>Request body (0 bytes)</summary>
+				
+				<pre><code></code></pre>
+				
+				
+			</details></td>
+	</tr>
+	<tr>
+		<th scope="row">Response</th>
+		<td><details open="open">
+				<summary>Status line and header section (572 bytes)</summary>
+				
+				<pre><code>HTTP/1.1 200
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Content-Security-Policy: default-src &#39;self&#39;; img-src &#39;self&#39; data:; style-src &#39;self&#39; &#39;unsafe-inline&#39;; script-src &#39;self&#39; &#39;unsafe-inline&#39;; font-src &#39;self&#39; data:; connect-src &#39;self&#39;; frame-ancestors &#39;none&#39;
+X-XSS-Protection: 1; mode=block
+Referrer-Policy: strict-origin-when-cross-origin
+Vary: origin,access-control-request-method,access-control-request-headers,accept-encoding
+Content-Type: text/html;charset=UTF-8
+Content-Language: zh-CN
+Date: Fri, 09 Oct 2026 05:57:08 GMT
+content-length: 6579
+
+</code></pre>
+				
+				
+			</details> <details class="response-body">
+				<summary>Response body (6579 bytes)</summary>
+				
+				<pre><code>&lt;script&gt;
+document.addEventListener(&#39;DOMContentLoaded&#39;, function () {
+    const tabSms = document.getElementById(&#39;tabSms&#39;);
+    const tabPwd = document.getElementById(&#39;tabPwd&#39;);
+    const panelSms = document.getElementById(&#39;panelSms&#39;);
+    const panelPwd = document.getElementById(&#39;panelPwd&#39;);
+    const msgBox = document.getElementById(&#39;msgBox&#39;);
+
+    const smsPhone = document.getElementById(&#39;smsPhone&#39;);
+    const smsCode = document.getElementById(&#39;smsCode&#39;);
+    const sendCodeBtn = document.getElementById(&#39;sendCodeBtn&#39;);
+    const smsLoginBtn = document.getElementById(&#39;smsLoginBtn&#39;);
+
+    const pwdUsername = document.getElementById(&#39;pwdUsername&#39;);
+    const pwdPassword = document.getElementById(&#39;pwdPassword&#39;);
+    const pwdLoginBtn = document.getElementById(&#39;pwdLoginBtn&#39;);
+
+    let countdown = 0;
+    let timer = null;
+
+    function showMsg(text, type) {
+        msgBox.textContent = text;
+        msgBox.className = &#39;msg &#39; + type;
+    }
+    function hideMsg() { msgBox.className = &#39;msg&#39;; }
+
+    // Tab
+    tabSms.addEventListener(&#39;click&#39;, function () {
+        tabSms.classList.add(&#39;active&#39;); tabPwd.classList.remove(&#39;active&#39;);
+        panelSms.classList.add(&#39;active&#39;); panelPwd.classList.remove(&#39;active&#39;);
+        hideMsg();
+    });
+    tabPwd.addEventListener(&#39;click&#39;, function () {
+        tabPwd.classList.add(&#39;active&#39;); tabSms.classList.remove(&#39;active&#39;);
+        panelPwd.classList.add(&#39;active&#39;); panelSms.classList.remove(&#39;active&#39;);
+        hideMsg();
+    });
+
+    // 手机验证码
+    function checkSendBtn() {
+        const phone = smsPhone.value.trim();
+        const valid = /^1[3-9]\d{9}$/.test(phone);
+        sendCodeBtn.disabled = !(valid &amp;&amp; countdown === 0);
+        sendCodeBtn.textContent = countdown &gt; 0 ? (countdown + &#39; 秒后重发&#39;) : &#39;发送验证码&#39;;
+    }
+    function checkSmsLoginBtn() {
+        const vp = /^1[3-9]\d{9}$/.test(smsPhone.value.trim());
+        const vc = /^\d{6}$/.test(smsCode.value.trim());
+        smsLoginBtn.disabled = !(vp &amp;&amp; vc);
+    }
+    smsPhone.addEventListener(&#39;input&#39;, function () { checkSendBtn(); checkSmsLoginBtn(); });
+    smsCode.addEventListener(&#39;input&#39;, checkSmsLoginBtn);
+    checkSendBtn();
+    checkSmsLoginBtn();
+
+    // ★ 发送验证码：后端返回 code → alert 显示 → 自动填入
+    sendCodeBtn.addEventListener(&#39;click&#39;, function () {
+        const phone = smsPhone.value.trim();
+        if (!/^1[3-9]\d{9}$/.test(phone)) { showMsg(&#39;请输入正确的手机号&#39;, &#39;error&#39;); return; }
+        sendCodeBtn.disabled = true;
+
+        fetch(&#39;/api/user/send-sms&#39;, {
+            method: &#39;POST&#39;,
+            headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+            body: JSON.stringify({ phone: phone })
+        })
+        .then(r =&gt; r.json())
+        .then(result =&gt; {
+            if (result.code !== 200) throw new Error(result.message);
+            const code = result.data;
+
+            // ★ 弹窗显示
+            alert(&#39;【演示环境】\n您的验证码是：&#39; + code + &#39;\n\n已自动填入。&#39;);
+            smsCode.value = code;
+            checkSmsLoginBtn();
+
+            countdown = 60;
+            checkSendBtn();
+            timer = setInterval(function () {
+                countdown--;
+                checkSendBtn();
+                if (countdown &lt;= 0) { clearInterval(timer); checkSendBtn(); }
+            }, 1000);
+        })
+        .catch(err =&gt; {
+            showMsg(err.message || &#39;发送失败&#39;, &#39;error&#39;);
+            sendCodeBtn.disabled = false;
+            checkSendBtn();
+        });
+    });
+
+    // 短信登录
+    smsLoginBtn.addEventListener(&#39;click&#39;, doSmsLogin);
+    function doSmsLogin() {
+        const phone = smsPhone.value.trim();
+        const code = smsCode.value.trim();
+        if (!/^1[3-9]\d{9}$/.test(phone)) { showMsg(&#39;请输入正确的手机号&#39;, &#39;error&#39;); return; }
+        if (!/^\d{6}$/.test(code)) { showMsg(&#39;请输入 6 位验证码&#39;, &#39;error&#39;); return; }
+
+        smsLoginBtn.disabled = true;
+        smsLoginBtn.textContent = &#39;登录中...&#39;;
+
+        fetch(&#39;/api/user/login-sms&#39;, {
+            method: &#39;POST&#39;,
+            headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+            body: JSON.stringify({ phone: phone, code: code })
+        })
+        .then(r =&gt; r.json())
+        .then(result =&gt; {
+            if (result.code !== 200) throw new Error(result.message);
+            showMsg(&#39;登录成功，跳转中...&#39;, &#39;success&#39;);
+            setTimeout(() =&gt; {
+                const back = sessionStorage.getItem(&#39;loginBack&#39;) || &#39;/&#39;;
+                sessionStorage.removeItem(&#39;loginBack&#39;);
+                window.location.href = back;
+            }, 700);
+        })
+        .catch(err =&gt; {
+            showMsg(err.message || &#39;登录失败&#39;, &#39;error&#39;);
+            smsLoginBtn.disabled = false;
+            smsLoginBtn.textContent = &#39;登录 / 注册&#39;;
+            checkSmsLoginBtn();
+        });
+    }
+
+    // 账号密码
+    function checkPwdLoginBtn() {
+        const u = pwdUsername.value.trim();
+        const p = pwdPassword.value.trim();
+        pwdLoginBtn.disabled = !(u &amp;&amp; p);
+    }
+    pwdUsername.addEventListener(&#39;input&#39;, checkPwdLoginBtn);
+    pwdPassword.addEventListener(&#39;input&#39;, checkPwdLoginBtn);
+    checkPwdLoginBtn();
+
+    pwdLoginBtn.addEventListener(&#39;click&#39;, function () {
+        const username = pwdUsername.value.trim();
+        const password = pwdPassword.value.trim();
+        if (!username || !password) { showMsg(&#39;请填写用户名和密码&#39;, &#39;error&#39;); return; }
+
+        pwdLoginBtn.disabled = true;
+        pwdLoginBtn.textContent = &#39;登录中...&#39;;
+
+        fetch(&#39;/api/user/login&#39;, {
+            method: &#39;POST&#39;,
+            headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+            body: JSON.stringify({ username: username, password: password })
+        })
+        .then(r =&gt; r.json())
+        .then(result =&gt; {
+            if (result.code !== 200) throw new Error(result.message);
+            showMsg(&#39;登录成功，跳转中...&#39;, &#39;success&#39;);
+            setTimeout(() =&gt; {
+                const back = sessionStorage.getItem(&#39;loginBack&#39;) || &#39;/&#39;;
+                sessionStorage.removeItem(&#39;loginBack&#39;);
+                window.location.href = back;
+            }, 700);
+        })
+        .catch(err =&gt; {
+            showMsg(err.message || &#39;登录失败&#39;, &#39;error&#39;);
+            pwdLoginBtn.disabled = false;
+            pwdLoginBtn.textContent = &#39;登录&#39;;
+            checkPwdLoginBtn();
+        });
+    });
+});
+&lt;/script&gt;</code></pre>
+				
+				
+			</details></td>
+	</tr>
+	<tr>
+		<th scope="row">Parameter</th>
+		<td><pre><code>Content-Security-Policy</code></pre></td>
+	</tr>
+	
+	<tr>
+		<th scope="row">Evidence</th>
+		<td><pre><code>default-src &#39;self&#39;; img-src &#39;self&#39; data:; style-src &#39;self&#39; &#39;unsafe-inline&#39;; script-src &#39;self&#39; &#39;unsafe-inline&#39;; font-src &#39;self&#39; data:; connect-src &#39;self&#39;; frame-ancestors &#39;none&#39;</code></pre></td>
+	</tr>
+	<tr>
+		<th scope="row">Solution</th>
+		<td> 
+<p>Ensure that your web server, application server, load balancer, etc. is properly configured to set the Content-Security-Policy header.</p>
+ </td>
+	</tr>
+</table>
+
+											</details></li>
+									</ol>
+								</li>
+								
+								<li>
+									<h5>
+										<a
+											href="#alert-type-2">CSP: style-src 不安全-内联</a> <span>(1)</span>
+									</h5>
+									<ol>
+										<li><details>
+												<summary>
+													<span class="request-method-n-url">GET http://localhost:8080/login</span>
+												</summary>
+												
+<table class="alerts-table">
+	<tr>
+		<th scope="row">Alert tags</th>
+		<td>
+			<ul class="alert-tags-list">
+				<li>
+					<span><a href="https://owasp.org/Top10/A05_2021-Security_Misconfiguration/">OWASP_2021_A05</a></span> 
+				</li>
+				<li>
+					 <span>POLICY_QA_STD = </span>
+				</li>
+				<li>
+					 <span>POLICY_PENTEST = </span>
+				</li>
+				<li>
+					<span><a href="https://www.zaproxy.org/docs/desktop/addons/common-library/alerttags/#systemic">SYSTEMIC</a></span> 
+				</li>
+				<li>
+					<span><a href="https://cwe.mitre.org/data/definitions/693.html">CWE-693</a></span> 
+				</li>
+				<li>
+					<span><a href="https://owasp.org/www-project-top-ten/2017/A6_2017-Security_Misconfiguration.html">OWASP_2017_A06</a></span> 
+				</li>
+				<li>
+					 <span>POLICY_DEV_STD = </span>
+				</li>
+			</ul>
+		</td>
+	</tr>
+	<tr>
+		<th scope="row">Alert description</th>
+		<td> 
+<p>Content Security Policy (CSP) is an added layer of security that helps to detect and mitigate certain types of attacks. Including (but not limited to) Cross Site Scripting (XSS), and data injection attacks. These attacks are used for everything from data theft to site defacement or distribution of malware. CSP provides a set of standard HTTP headers that allow website owners to declare approved sources of content that browsers should be allowed to load on that page — covered types are JavaScript, CSS, HTML frames, fonts, images and embeddable objects such as Java applets, ActiveX, audio and video files.</p>
+ </td>
+	</tr>
+	<tr>
+		<th scope="row">Other info</th>
+		<td> 
+<p>style-src includes unsafe-inline.</p>
+ </td>
+	</tr>
+	<tr>
+		<th scope="row">Request</th>
+		<td><details open="open">
+				<summary>Request line and header section (267 bytes)</summary>
+				
+				<pre><code>GET http://localhost:8080/login HTTP/1.1
+host: localhost:8080
+user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36
+pragma: no-cache
+cache-control: no-cache
+referer: http://localhost:8080/
+
+</code></pre>
+				
+				
+			</details> <details class="request-body" open="open">
+				<summary>Request body (0 bytes)</summary>
+				
+				<pre><code></code></pre>
+				
+				
+			</details></td>
+	</tr>
+	<tr>
+		<th scope="row">Response</th>
+		<td><details open="open">
+				<summary>Status line and header section (572 bytes)</summary>
+				
+				<pre><code>HTTP/1.1 200
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Content-Security-Policy: default-src &#39;self&#39;; img-src &#39;self&#39; data:; style-src &#39;self&#39; &#39;unsafe-inline&#39;; script-src &#39;self&#39; &#39;unsafe-inline&#39;; font-src &#39;self&#39; data:; connect-src &#39;self&#39;; frame-ancestors &#39;none&#39;
+X-XSS-Protection: 1; mode=block
+Referrer-Policy: strict-origin-when-cross-origin
+Vary: origin,access-control-request-method,access-control-request-headers,accept-encoding
+Content-Type: text/html;charset=UTF-8
+Content-Language: zh-CN
+Date: Fri, 09 Oct 2026 05:57:08 GMT
+content-length: 6579
+
+</code></pre>
+				
+				
+			</details> <details class="response-body">
+				<summary>Response body (6579 bytes)</summary>
+				
+				<pre><code>&lt;script&gt;
+document.addEventListener(&#39;DOMContentLoaded&#39;, function () {
+    const tabSms = document.getElementById(&#39;tabSms&#39;);
+    const tabPwd = document.getElementById(&#39;tabPwd&#39;);
+    const panelSms = document.getElementById(&#39;panelSms&#39;);
+    const panelPwd = document.getElementById(&#39;panelPwd&#39;);
+    const msgBox = document.getElementById(&#39;msgBox&#39;);
+
+    const smsPhone = document.getElementById(&#39;smsPhone&#39;);
+    const smsCode = document.getElementById(&#39;smsCode&#39;);
+    const sendCodeBtn = document.getElementById(&#39;sendCodeBtn&#39;);
+    const smsLoginBtn = document.getElementById(&#39;smsLoginBtn&#39;);
+
+    const pwdUsername = document.getElementById(&#39;pwdUsername&#39;);
+    const pwdPassword = document.getElementById(&#39;pwdPassword&#39;);
+    const pwdLoginBtn = document.getElementById(&#39;pwdLoginBtn&#39;);
+
+    let countdown = 0;
+    let timer = null;
+
+    function showMsg(text, type) {
+        msgBox.textContent = text;
+        msgBox.className = &#39;msg &#39; + type;
+    }
+    function hideMsg() { msgBox.className = &#39;msg&#39;; }
+
+    // Tab
+    tabSms.addEventListener(&#39;click&#39;, function () {
+        tabSms.classList.add(&#39;active&#39;); tabPwd.classList.remove(&#39;active&#39;);
+        panelSms.classList.add(&#39;active&#39;); panelPwd.classList.remove(&#39;active&#39;);
+        hideMsg();
+    });
+    tabPwd.addEventListener(&#39;click&#39;, function () {
+        tabPwd.classList.add(&#39;active&#39;); tabSms.classList.remove(&#39;active&#39;);
+        panelPwd.classList.add(&#39;active&#39;); panelSms.classList.remove(&#39;active&#39;);
+        hideMsg();
+    });
+
+    // 手机验证码
+    function checkSendBtn() {
+        const phone = smsPhone.value.trim();
+        const valid = /^1[3-9]\d{9}$/.test(phone);
+        sendCodeBtn.disabled = !(valid &amp;&amp; countdown === 0);
+        sendCodeBtn.textContent = countdown &gt; 0 ? (countdown + &#39; 秒后重发&#39;) : &#39;发送验证码&#39;;
+    }
+    function checkSmsLoginBtn() {
+        const vp = /^1[3-9]\d{9}$/.test(smsPhone.value.trim());
+        const vc = /^\d{6}$/.test(smsCode.value.trim());
+        smsLoginBtn.disabled = !(vp &amp;&amp; vc);
+    }
+    smsPhone.addEventListener(&#39;input&#39;, function () { checkSendBtn(); checkSmsLoginBtn(); });
+    smsCode.addEventListener(&#39;input&#39;, checkSmsLoginBtn);
+    checkSendBtn();
+    checkSmsLoginBtn();
+
+    // ★ 发送验证码：后端返回 code → alert 显示 → 自动填入
+    sendCodeBtn.addEventListener(&#39;click&#39;, function () {
+        const phone = smsPhone.value.trim();
+        if (!/^1[3-9]\d{9}$/.test(phone)) { showMsg(&#39;请输入正确的手机号&#39;, &#39;error&#39;); return; }
+        sendCodeBtn.disabled = true;
+
+        fetch(&#39;/api/user/send-sms&#39;, {
+            method: &#39;POST&#39;,
+            headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+            body: JSON.stringify({ phone: phone })
+        })
+        .then(r =&gt; r.json())
+        .then(result =&gt; {
+            if (result.code !== 200) throw new Error(result.message);
+            const code = result.data;
+
+            // ★ 弹窗显示
+            alert(&#39;【演示环境】\n您的验证码是：&#39; + code + &#39;\n\n已自动填入。&#39;);
+            smsCode.value = code;
+            checkSmsLoginBtn();
+
+            countdown = 60;
+            checkSendBtn();
+            timer = setInterval(function () {
+                countdown--;
+                checkSendBtn();
+                if (countdown &lt;= 0) { clearInterval(timer); checkSendBtn(); }
+            }, 1000);
+        })
+        .catch(err =&gt; {
+            showMsg(err.message || &#39;发送失败&#39;, &#39;error&#39;);
+            sendCodeBtn.disabled = false;
+            checkSendBtn();
+        });
+    });
+
+    // 短信登录
+    smsLoginBtn.addEventListener(&#39;click&#39;, doSmsLogin);
+    function doSmsLogin() {
+        const phone = smsPhone.value.trim();
+        const code = smsCode.value.trim();
+        if (!/^1[3-9]\d{9}$/.test(phone)) { showMsg(&#39;请输入正确的手机号&#39;, &#39;error&#39;); return; }
+        if (!/^\d{6}$/.test(code)) { showMsg(&#39;请输入 6 位验证码&#39;, &#39;error&#39;); return; }
+
+        smsLoginBtn.disabled = true;
+        smsLoginBtn.textContent = &#39;登录中...&#39;;
+
+        fetch(&#39;/api/user/login-sms&#39;, {
+            method: &#39;POST&#39;,
+            headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+            body: JSON.stringify({ phone: phone, code: code })
+        })
+        .then(r =&gt; r.json())
+        .then(result =&gt; {
+            if (result.code !== 200) throw new Error(result.message);
+            showMsg(&#39;登录成功，跳转中...&#39;, &#39;success&#39;);
+            setTimeout(() =&gt; {
+                const back = sessionStorage.getItem(&#39;loginBack&#39;) || &#39;/&#39;;
+                sessionStorage.removeItem(&#39;loginBack&#39;);
+                window.location.href = back;
+            }, 700);
+        })
+        .catch(err =&gt; {
+            showMsg(err.message || &#39;登录失败&#39;, &#39;error&#39;);
+            smsLoginBtn.disabled = false;
+            smsLoginBtn.textContent = &#39;登录 / 注册&#39;;
+            checkSmsLoginBtn();
+        });
+    }
+
+    // 账号密码
+    function checkPwdLoginBtn() {
+        const u = pwdUsername.value.trim();
+        const p = pwdPassword.value.trim();
+        pwdLoginBtn.disabled = !(u &amp;&amp; p);
+    }
+    pwdUsername.addEventListener(&#39;input&#39;, checkPwdLoginBtn);
+    pwdPassword.addEventListener(&#39;input&#39;, checkPwdLoginBtn);
+    checkPwdLoginBtn();
+
+    pwdLoginBtn.addEventListener(&#39;click&#39;, function () {
+        const username = pwdUsername.value.trim();
+        const password = pwdPassword.value.trim();
+        if (!username || !password) { showMsg(&#39;请填写用户名和密码&#39;, &#39;error&#39;); return; }
+
+        pwdLoginBtn.disabled = true;
+        pwdLoginBtn.textContent = &#39;登录中...&#39;;
+
+        fetch(&#39;/api/user/login&#39;, {
+            method: &#39;POST&#39;,
+            headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+            body: JSON.stringify({ username: username, password: password })
+        })
+        .then(r =&gt; r.json())
+        .then(result =&gt; {
+            if (result.code !== 200) throw new Error(result.message);
+            showMsg(&#39;登录成功，跳转中...&#39;, &#39;success&#39;);
+            setTimeout(() =&gt; {
+                const back = sessionStorage.getItem(&#39;loginBack&#39;) || &#39;/&#39;;
+                sessionStorage.removeItem(&#39;loginBack&#39;);
+                window.location.href = back;
+            }, 700);
+        })
+        .catch(err =&gt; {
+            showMsg(err.message || &#39;登录失败&#39;, &#39;error&#39;);
+            pwdLoginBtn.disabled = false;
+            pwdLoginBtn.textContent = &#39;登录&#39;;
+            checkPwdLoginBtn();
+        });
+    });
+});
+&lt;/script&gt;</code></pre>
+				
+				
+			</details></td>
+	</tr>
+	<tr>
+		<th scope="row">Parameter</th>
+		<td><pre><code>Content-Security-Policy</code></pre></td>
+	</tr>
+	
+	<tr>
+		<th scope="row">Evidence</th>
+		<td><pre><code>default-src &#39;self&#39;; img-src &#39;self&#39; data:; style-src &#39;self&#39; &#39;unsafe-inline&#39;; script-src &#39;self&#39; &#39;unsafe-inline&#39;; font-src &#39;self&#39; data:; connect-src &#39;self&#39;; frame-ancestors &#39;none&#39;</code></pre></td>
+	</tr>
+	<tr>
+		<th scope="row">Solution</th>
+		<td> 
+<p>Ensure that your web server, application server, load balancer, etc. is properly configured to set the Content-Security-Policy header.</p>
+ </td>
+	</tr>
+</table>
+
+											</details></li>
+									</ol>
+								</li>
+								
+							</ol>
+						</li>
+						
+					</ol>
+				</li>
+				
+				
+				
+				
+				  
+				 
+				 
+				
+				
+				
+				
+				<li id="alerts--risk-0-confidence-2">
+					<h3>
+						<span>Risk</span>=<span
+							class="risk-level">信息提示</span>, <span>Confidence</span>=<span
+							class="confidence-level">中</span> <span>(2)</span>
+					</h3>
+					<ol>
+						
+						<li class="alerts--site-li">
+							<h4>
+								<span class="site">http://localhost:8080</span> <span>(2)</span>
+							</h4>
+							<ol>
+								
+								<li>
+									<h5>
+										<a
+											href="#alert-type-3">Information Disclosure - Suspicious Comments</a> <span>(1)</span>
+									</h5>
+									<ol>
+										<li><details>
+												<summary>
+													<span class="request-method-n-url">GET http://localhost:8080/movie/detail/3</span>
+												</summary>
+												
+<table class="alerts-table">
+	<tr>
+		<th scope="row">Alert tags</th>
+		<td>
+			<ul class="alert-tags-list">
+				<li>
+					<span><a href="https://owasp.org/Top10/A01_2021-Broken_Access_Control/">OWASP_2021_A01</a></span> 
+				</li>
+				<li>
+					<span><a href="https://owasp.org/www-project-web-security-testing-guide/v42/4-Web_Application_Security_Testing/01-Information_Gathering/05-Review_Webpage_Content_for_Information_Leakage">WSTG-v42-INFO-05</a></span> 
+				</li>
+				<li>
+					<span><a href="https://owasp.org/www-project-top-ten/2017/A3_2017-Sensitive_Data_Exposure.html">OWASP_2017_A03</a></span> 
+				</li>
+				<li>
+					 <span>POLICY_PENTEST = </span>
+				</li>
+				<li>
+					<span><a href="https://cwe.mitre.org/data/definitions/615.html">CWE-615</a></span> 
+				</li>
+			</ul>
+		</td>
+	</tr>
+	<tr>
+		<th scope="row">Alert description</th>
+		<td> 
+<p>The response appears to contain suspicious comments which may help an attacker.</p>
+ </td>
+	</tr>
+	<tr>
+		<th scope="row">Other info</th>
+		<td> 
+<p>The following pattern was used: \bUSER\b and was detected in likely comment: &quot;&lt;!--</p>
+
+<p>  【模板】movie-detail.html —— 电影详情页</p>
+
+<p>  【路由】GET /movie/detail/{id}</p>
+
+<p>  【渲染方】PageController.movieDetail(id, model) → return &quot;mov&quot;, see evidence field for the suspicious comment/snippet.</p>
+ </td>
+	</tr>
+	<tr>
+		<th scope="row">Request</th>
+		<td><details open="open">
+				<summary>Request line and header section (276 bytes)</summary>
+				
+				<pre><code>GET http://localhost:8080/movie/detail/3 HTTP/1.1
+host: localhost:8080
+user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36
+pragma: no-cache
+cache-control: no-cache
+referer: http://localhost:8080/
+
+</code></pre>
+				
+				
+			</details> <details class="request-body" open="open">
+				<summary>Request body (0 bytes)</summary>
+				
+				<pre><code></code></pre>
+				
+				
+			</details></td>
+	</tr>
+	<tr>
+		<th scope="row">Response</th>
+		<td><details open="open">
+				<summary>Status line and header section (573 bytes)</summary>
+				
+				<pre><code>HTTP/1.1 200
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Content-Security-Policy: default-src &#39;self&#39;; img-src &#39;self&#39; data:; style-src &#39;self&#39; &#39;unsafe-inline&#39;; script-src &#39;self&#39; &#39;unsafe-inline&#39;; font-src &#39;self&#39; data:; connect-src &#39;self&#39;; frame-ancestors &#39;none&#39;
+X-XSS-Protection: 1; mode=block
+Referrer-Policy: strict-origin-when-cross-origin
+Vary: origin,access-control-request-method,access-control-request-headers,accept-encoding
+Content-Type: text/html;charset=UTF-8
+Content-Language: zh-CN
+Date: Fri, 09 Oct 2026 05:57:08 GMT
+content-length: 15328
+
+</code></pre>
+				
+				
+			</details> <details class="response-body">
+				<summary>Response body (15328 bytes)</summary>
+				
+				<pre><code>﻿&lt;!--
+  【模板】movie-detail.html —— 电影详情页
+  【路由】GET /movie/detail/{id}
+  【渲染方】PageController.movieDetail(id, model) → return &quot;movie-detail&quot;
+
+  【Thymeleaf 变量】
+    - movie    Movie   当前电影（可能为 null，模板做了兜底）
+
+  【内嵌 JS 调用】
+    - POST /api/user/logout   退出登录
+
+  【导航入口】
+    首页电影海报 / 标题点击 → 本页
+    本页&quot;特惠购票&quot;按钮 → /cinemas/{movie.id}
+
+  【⚠️ 已知问题】
+    1. &quot;剧情简介&quot;、&quot;演职人员&quot;、&quot;图集&quot;、&quot;票房&quot; 都是硬编码假数据
+    2. &quot;预告片&quot;侧边栏也是硬编码
+    3. 底部&quot;票房&quot;三张卡（昨日排名/首周票房/累计票房）写死
+--&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;欢迎来龙餐馆_星幕影票&lt;/title&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/css/login-modal.css&quot;&gt; 
+&lt;/head&gt;
+&lt;body&gt;
+
+    &lt;!-- ===== 顶部导航（与 index.html 相同结构）===== --&gt;
+    &lt;header class=&quot;top-nav&quot;&gt;
+        &lt;style&gt;
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: &quot;Microsoft YaHei&quot;, Arial, sans-serif; background: #fff; color: #333; font-size: 14px; }
+    a { text-decoration: none; color: inherit; }
+    ul, li { list-style: none; }
+
+    .top-nav { height: 80px; border-bottom: 1px solid #e5e5e5; display: flex; align-items: center; padding: 0 15%; position: sticky; top: 0; background: #fff; z-index: 100; }
+    .logo { display: flex; align-items: center; margin-right: 40px; }
+    .logo-icon { width: 40px; height: 40px; background: #1e3a8a; border-radius: 50%; color: #fff; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; margin-right: 10px; }
+    .logo-text { font-size: 20px; font-weight: bold; }
+    .main-menu { display: flex; height: 100%; }
+    .main-menu li { height: 100%; }
+    .main-menu li a { display: flex; align-items: center; height: 100%; padding: 0 20px; font-size: 16px; color: #333; }
+    .main-menu li.active a { color: #1e3a8a; }
+    .nav-right { margin-left: auto; display: flex; align-items: center; gap: 20px; }
+    .nav-right &gt; div { cursor: pointer; }
+
+    .user-menu { display: flex; align-items: center; gap: 20px; }
+    .user-dropdown { position: relative; cursor: pointer; }
+    .user-name { color: #333; font-size: 14px; }
+    .dropdown-menu { display: none; position: absolute; top: 100%; right: 0; background: #fff; border: 1px solid #e5e5e5; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); min-width: 120px; padding: 8px 0; z-index: 1000; }
+    .user-dropdown:hover .dropdown-menu { display: block; }
+    .dropdown-menu a { display: block; padding: 10px 20px; font-size: 14px; color: #333; }
+    .dropdown-menu a:hover { background: #f5f5f5; color: #1e3a8a; }
+
+    .movie-header { background: linear-gradient(to right, #0f172a, #1e3a8a); color: #fff; padding: 40px 0; }
+    .movie-header-content { width: 1200px; margin: 0 auto; display: flex; align-items: flex-start; }
+    .movie-poster { width: 240px; height: 340px; margin-right: 30px; border-radius: 4px; overflow: hidden; flex-shrink: 0; background: #1a1a1a; position: relative; }
+    .movie-poster .poster-img { width: 100%; height: 100%; background-size: cover; background-position: center; }
+    .poster-tag { position: absolute; top: 8px; left: 8px; background: #2b8eff; color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 2px; }
+    .movie-info { flex: 1; }
+    .movie-title { font-size: 28px; font-weight: bold; margin-bottom: 8px; }
+    .movie-meta { font-size: 14px; color: #ccc; margin-bottom: 6px; }
+    .movie-actions { display: flex; gap: 15px; margin: 20px 0; }
+    .action-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    .buy-ticket-btn { display: inline-block; background: #1e3a8a; color: #fff; padding: 12px 40px; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; border: none; }
+    .buy-ticket-btn:hover { background: #152c6b; }
+    .movie-stats { text-align: right; margin-left: auto; flex-shrink: 0; }
+    .rating-label { font-size: 13px; color: #ccc; margin-bottom: 5px; }
+    .rating-score { font-size: 36px; color: #ffb400; font-weight: bold; line-height: 1; }
+    .rating-stars { color: #ffb400; font-size: 14px; margin: 5px 0; }
+    .rating-count { font-size: 12px; color: #ccc; margin-bottom: 20px; }
+    .box-office-label { font-size: 13px; color: #ccc; margin-bottom: 5px; }
+    .box-office-value { font-size: 24px; color: #fff; font-weight: bold; }
+
+    .movie-detail-row { display: flex; gap: 30px; margin-bottom: 10px; font-size: 14px; color: #ccc; }
+    .movie-detail-row .label { color: #888; }
+    .movie-detail-row .value { color: #fff; }
+
+    .container { width: 1200px; margin: 0 auto; padding: 30px 0 60px; display: flex; gap: 40px; }
+    .main-content { flex: 1; }
+    .sidebar { width: 320px; flex-shrink: 0; }
+
+    .breadcrumb { font-size: 13px; color: #999; margin-bottom: 20px; }
+    .breadcrumb a { color: #999; }
+
+    .tabs { display: flex; border-bottom: 1px solid #e5e5e5; margin-bottom: 25px; gap: 30px; }
+    .tab-item { padding: 10px 0; font-size: 16px; cursor: pointer; color: #333; border-bottom: 2px solid transparent; }
+    .tab-item.active { color: #1e3a8a; border-bottom-color: #1e3a8a; }
+
+    .section-title { display: flex; align-items: center; margin-bottom: 15px; }
+    .section-title::before { content: &#39;&#39;; display: inline-block; width: 4px; height: 18px; background: #1e3a8a; margin-right: 8px; border-radius: 2px; }
+    .section-title h3 { font-size: 18px; font-weight: bold; }
+    .section-title .more { margin-left: auto; font-size: 13px; color: #999; cursor: pointer; }
+
+    .plot-summary { font-size: 14px; line-height: 1.9; color: #333; text-indent: 2em; margin-bottom: 40px; }
+
+    .cast-list { display: flex; gap: 30px; margin-bottom: 40px; flex-wrap: wrap; }
+    .cast-item { text-align: center; width: 100px; }
+    .cast-avatar { width: 100px; height: 100px; border-radius: 4px; margin-bottom: 8px; background: #f0f0f0; }
+    .cast-name { font-size: 14px; margin-bottom: 3px; }
+    .cast-role { font-size: 12px; color: #999; }
+
+    .gallery { display: grid; grid-template-columns: 2fr 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; margin-bottom: 40px; height: 320px; }
+    .gallery-item { overflow: hidden; border-radius: 4px; background: #f0f0f0; }
+    .gallery-item:first-child { grid-row: span 2; }
+
+    .movie-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 40px; }
+    .fact-card { border: 1px solid #e5e5e5; border-radius: 4px; padding: 15px 20px; }
+    .fact-label { font-size: 13px; color: #999; margin-bottom: 8px; }
+    .fact-value { font-size: 14px; }
+
+    .box-office-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+    .box-office-card { background: #f8f8f8; border-radius: 4px; padding: 25px 20px; text-align: center; }
+    .box-office-card .value { font-size: 28px; color: #1e3a8a; font-weight: bold; margin-bottom: 8px; }
+    .box-office-card .label { font-size: 13px; color: #999; }
+
+    .sidebar-section { margin-bottom: 30px; }
+    .sidebar-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; }
+    .sidebar-title::before { content: &#39;&#39;; display: inline-block; width: 3px; height: 16px; background: #1e3a8a; margin-right: 8px; border-radius: 2px; }
+    .trailer-item { display: flex; gap: 12px; margin-bottom: 15px; cursor: pointer; }
+    .trailer-thumb { width: 120px; height: 68px; border-radius: 4px; overflow: hidden; position: relative; flex-shrink: 0; }
+    .trailer-num { position: absolute; bottom: 0; left: 0; background: #ffb400; color: #fff; font-size: 11px; padding: 1px 5px; font-weight: bold; }
+    .trailer-info { flex: 1; }
+    .trailer-title { font-size: 13px; line-height: 1.5; margin-bottom: 5px; }
+    .trailer-count { font-size: 12px; color: #999; }
+
+    .footer { background: #262426; color: #999; padding: 40px 0; margin-top: 60px; font-size: 12px; line-height: 2; text-align: center; }
+    .footer a { color: #1e3a8a; margin: 0 5px; }
+&lt;/style&gt;
+        &lt;div class=&quot;nav-right&quot;&gt;
+            &lt;div&gt;📱 APP下载 ▼&lt;/div&gt;
+            &lt;!-- 未登录 --&gt;
+            &lt;div&gt;
+                &lt;a href=&quot;/login&quot; style=&quot;color:#1e3a8a; font-weight:bold;&quot;&gt;登录 / 注册&lt;/a&gt;
+            &lt;/div&gt;
+            &lt;!-- 已登录 --&gt;
+            
+        &lt;/div&gt;
+    &lt;/header&gt;
+
+    &lt;!-- ===== 顶部电影信息大图 ===== --&gt;
+    &lt;!-- 所有字段都做了 movie != null 兜底 --&gt;
+    &lt;div class=&quot;movie-header&quot;&gt;
+        &lt;div class=&quot;movie-header-content&quot;&gt;
+            &lt;div class=&quot;movie-poster&quot;&gt;
+                &lt;div class=&quot;poster-tag&quot;&gt;2DIMAX&lt;/div&gt;
+                &lt;div class=&quot;poster-img&quot;
+                     style=&quot;background-image: url(/images/poster3.jpg); background-size: cover; background-position: center;&quot;&gt;&lt;/div&gt;
+            &lt;/div&gt;
+            &lt;div class=&quot;movie-info&quot;&gt;
+                &lt;h1 class=&quot;movie-title&quot;&gt;欢迎来龙餐馆&lt;/h1&gt;
+
+                &lt;!-- 上映日期 --&gt;
+                &lt;div class=&quot;movie-meta&quot;&gt;2026-09-22 中国大陆上映&lt;/div&gt;
+
+                &lt;!-- 导演 --&gt;
+                &lt;div class=&quot;movie-detail-row&quot;&gt;
+                    &lt;span class=&quot;label&quot;&gt;导演：&lt;/span&gt;
+                    &lt;span class=&quot;value&quot;&gt;陈可辛&lt;/span&gt;
+                &lt;/div&gt;
+
+                &lt;!-- 主演 --&gt;
+                &lt;div class=&quot;movie-detail-row&quot;&gt;
+                    &lt;span class=&quot;label&quot;&gt;主演：&lt;/span&gt;
+                    &lt;span class=&quot;value&quot;&gt;葛优,黄渤,沈腾&lt;/span&gt;
+                &lt;/div&gt;
+
+                &lt;!-- 片长 --&gt;
+                &lt;div class=&quot;movie-detail-row&quot;&gt;
+                    &lt;span class=&quot;label&quot;&gt;片长：&lt;/span&gt;
+                    &lt;span class=&quot;value&quot;&gt;145 分钟&lt;/span&gt;
+                &lt;/div&gt;
+
+                &lt;!-- 想看 / 评分按钮（装饰） --&gt;
+                &lt;div class=&quot;movie-actions&quot;&gt;
+                    &lt;button class=&quot;action-btn&quot;&gt;♡ 想看&lt;/button&gt;
+                    &lt;button class=&quot;action-btn&quot;&gt;★ 评分&lt;/button&gt;
+                &lt;/div&gt;
+
+                &lt;!-- ★ 关键跳转：进入选影院页 --&gt;
+                &lt;a href=&quot;/cinemas/3&quot; class=&quot;buy-ticket-btn&quot;&gt;特惠购票&lt;/a&gt;
+            &lt;/div&gt;
+
+            &lt;!-- 右侧评分卡（部分字段硬编码）--&gt;
+            &lt;div class=&quot;movie-stats&quot;&gt;
+                &lt;div class=&quot;rating-label&quot;&gt;星幕口碑&lt;/div&gt;
+                &lt;div class=&quot;rating-score&quot;&gt;9.7&lt;/div&gt;
+                &lt;div class=&quot;rating-stars&quot;&gt;★★★★★&lt;/div&gt;
+                &lt;div class=&quot;rating-count&quot;&gt;11.3万人评分&lt;/div&gt;   &lt;!-- ⚠️ 硬编码 --&gt;
+                &lt;div class=&quot;box-office-label&quot;&gt;累计票房&lt;/div&gt;
+                &lt;div class=&quot;box-office-value&quot;&gt;6.17 &lt;span&gt;亿&lt;/span&gt;&lt;/div&gt;   &lt;!-- ⚠️ 硬编码 --&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;!-- ===== 主体内容（大量硬编码）===== --&gt;
+    &lt;div class=&quot;container&quot;&gt;
+        &lt;main class=&quot;main-content&quot;&gt;
+            &lt;div class=&quot;breadcrumb&quot;&gt;
+                &lt;a href=&quot;/&quot;&gt;星幕影票&lt;/a&gt; &gt; &lt;a href=&quot;#&quot;&gt;电影&lt;/a&gt; &gt;
+                &lt;span&gt;欢迎来龙餐馆&lt;/span&gt;
+            &lt;/div&gt;
+
+            &lt;div class=&quot;tabs&quot;&gt;
+                &lt;div class=&quot;tab-item active&quot;&gt;介绍&lt;/div&gt;
+                &lt;div class=&quot;tab-item&quot;&gt;演职人员&lt;/div&gt;
+                &lt;div class=&quot;tab-item&quot;&gt;奖项&lt;/div&gt;
+                &lt;div class=&quot;tab-item&quot;&gt;图集&lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;!-- ⚠️ 剧情简介硬编码 --&gt;
+            &lt;div class=&quot;section-title&quot;&gt;&lt;h3&gt;剧情简介&lt;/h3&gt;&lt;/div&gt;
+            &lt;p class=&quot;plot-summary&quot;&gt;
+                影片以家喻户晓的传统民间故事为灵感进行创作，金牌班底脑洞大开，精彩好戏轮番上演。
+            &lt;/p&gt;
+
+            &lt;!-- ⚠️ 演职人员硬编码 --&gt;
+            &lt;div class=&quot;section-title&quot;&gt;&lt;h3&gt;演职人员&lt;/h3&gt;&lt;span class=&quot;more&quot;&gt;全部 &gt;&lt;/span&gt;&lt;/div&gt;
+            &lt;div class=&quot;cast-list&quot;&gt;
+                &lt;div class=&quot;cast-item&quot;&gt;&lt;div class=&quot;cast-avatar&quot; style=&quot;background:#ccc;&quot;&gt;&lt;/div&gt;&lt;div class=&quot;cast-name&quot;&gt;演员甲&lt;/div&gt;&lt;div class=&quot;cast-role&quot;&gt;饰：角色A&lt;/div&gt;&lt;/div&gt;
+                &lt;!-- ... 其余 4 个 ... --&gt;
+            &lt;/div&gt;
+
+            &lt;!-- ⚠️ 图集硬编码（彩色方块）--&gt;
+            &lt;div class=&quot;section-title&quot;&gt;&lt;h3&gt;图集&lt;/h3&gt;&lt;span class=&quot;more&quot;&gt;全部 &gt;&lt;/span&gt;&lt;/div&gt;
+            &lt;div class=&quot;gallery&quot;&gt;
+                &lt;div class=&quot;gallery-item&quot; style=&quot;background:#e74c3c;&quot;&gt;&lt;/div&gt;
+                &lt;!-- ... --&gt;
+            &lt;/div&gt;
+
+            &lt;!-- 影片资料：片长用 movie.duration，出品方硬编码 --&gt;
+            &lt;div class=&quot;section-title&quot;&gt;&lt;h3&gt;影片资料&lt;/h3&gt;&lt;/div&gt;
+            &lt;div class=&quot;movie-facts&quot;&gt;
+                &lt;div class=&quot;fact-card&quot;&gt;
+                    &lt;div class=&quot;fact-label&quot;&gt;📦 出品发行&lt;/div&gt;
+                    &lt;div class=&quot;fact-value&quot;&gt;星幕影业文化传媒有限公司&lt;/div&gt;
+                &lt;/div&gt;
+                &lt;div class=&quot;fact-card&quot;&gt;
+                    &lt;div class=&quot;fact-label&quot;&gt;⚙️ 技术参数&lt;/div&gt;
+                    &lt;div class=&quot;fact-value&quot;&gt;145 分钟&lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;!-- ⚠️ 票房三张卡硬编码 --&gt;
+            &lt;div class=&quot;section-title&quot;&gt;&lt;h3&gt;票房&lt;/h3&gt;&lt;span class=&quot;more&quot;&gt;票房详情 &gt;&lt;/span&gt;&lt;/div&gt;
+            &lt;div class=&quot;box-office-grid&quot;&gt;
+                &lt;div class=&quot;box-office-card&quot;&gt;&lt;div class=&quot;value&quot;&gt;4&lt;/div&gt;&lt;div class=&quot;label&quot;&gt;昨日排名&lt;/div&gt;&lt;/div&gt;
+                &lt;div class=&quot;box-office-card&quot;&gt;&lt;div class=&quot;value&quot;&gt;20806&lt;/div&gt;&lt;div class=&quot;label&quot;&gt;首周票房(万)&lt;/div&gt;&lt;/div&gt;
+                &lt;div class=&quot;box-office-card&quot;&gt;&lt;div class=&quot;value&quot;&gt;194951&lt;/div&gt;&lt;div class=&quot;label&quot;&gt;累计票房(万)&lt;/div&gt;&lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/main&gt;
+
+        &lt;!-- 侧边栏预告片（硬编码）--&gt;
+        &lt;aside class=&quot;sidebar&quot;&gt;
+            &lt;div class=&quot;sidebar-section&quot;&gt;
+                &lt;div class=&quot;sidebar-title&quot;&gt;预告片&lt;/div&gt;
+                &lt;div class=&quot;trailer-item&quot;&gt;
+                    &lt;div class=&quot;trailer-thumb&quot; style=&quot;background:#e74c3c;&quot;&gt;&lt;span class=&quot;trailer-num&quot;&gt;1&lt;/span&gt;&lt;/div&gt;
+                    &lt;div class=&quot;trailer-info&quot;&gt;&lt;div class=&quot;trailer-title&quot;&gt;官方预告片 01&lt;/div&gt;&lt;div class=&quot;trailer-count&quot;&gt;320.1万&lt;/div&gt;&lt;/div&gt;
+                &lt;/div&gt;
+                &lt;!-- ... --&gt;
+            &lt;/div&gt;
+        &lt;/aside&gt;
+    &lt;/div&gt;
+
+    &lt;footer class=&quot;footer&quot;&gt;&lt;!-- ... --&gt;&lt;/footer&gt;
+
+    &lt;script&gt;
+        // 退出登录
+        document.addEventListener(&#39;DOMContentLoaded&#39;, function () {
+            const logoutBtn = document.getElementById(&#39;logoutBtn&#39;);
+            if (logoutBtn) {
+                logoutBtn.addEventListener(&#39;click&#39;, function () {
+                    if (!confirm(&#39;确定要退出登录吗？&#39;)) return;
+                    fetch(&#39;/api/user/logout&#39;, { method: &#39;POST&#39; })
+                        .then(res =&gt; res.json())
+                        .then(() =&gt; { window.location.href = &#39;/&#39;; })
+                        .catch(() =&gt; { window.location.href = &#39;/&#39;; });
+                });
+            }
+        });
+    &lt;/script&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+				
+				
+			</details></td>
+	</tr>
+	
+	
+	<tr>
+		<th scope="row">Evidence</th>
+		<td><pre><code>user</code></pre></td>
+	</tr>
+	<tr>
+		<th scope="row">Solution</th>
+		<td> 
+<p>Remove all comments that return information that may help an attacker and fix any underlying problems they refer to.</p>
+ </td>
+	</tr>
+</table>
+
+											</details></li>
+									</ol>
+								</li>
+								
+								<li>
+									<h5>
+										<a
+											href="#alert-type-4">现代 Web 应用程序</a> <span>(1)</span>
+									</h5>
+									<ol>
+										<li><details>
+												<summary>
+													<span class="request-method-n-url">GET http://localhost:8080/login</span>
+												</summary>
+												
+<table class="alerts-table">
+	<tr>
+		<th scope="row">Alert tags</th>
+		<td>
+			<ul class="alert-tags-list">
+				<li>
+					 <span>POLICY_QA_STD = </span>
+				</li>
+				<li>
+					 <span>POLICY_PENTEST = </span>
+				</li>
+				<li>
+					<span><a href="https://www.zaproxy.org/docs/desktop/addons/common-library/alerttags/#systemic">SYSTEMIC</a></span> 
+				</li>
+				<li>
+					 <span>POLICY_DEV_STD = </span>
+				</li>
+			</ul>
+		</td>
+	</tr>
+	<tr>
+		<th scope="row">Alert description</th>
+		<td> 
+<p>The application appears to be a modern web application. If you need to explore it automatically then the Ajax Spider may well be more effective than the standard one.</p>
+ </td>
+	</tr>
+	<tr>
+		<th scope="row">Other info</th>
+		<td> 
+<p>No links have been found while there are scripts, which is an indication that this is a modern web application.</p>
+ </td>
+	</tr>
+	<tr>
+		<th scope="row">Request</th>
+		<td><details open="open">
+				<summary>Request line and header section (267 bytes)</summary>
+				
+				<pre><code>GET http://localhost:8080/login HTTP/1.1
+host: localhost:8080
+user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36
+pragma: no-cache
+cache-control: no-cache
+referer: http://localhost:8080/
+
+</code></pre>
+				
+				
+			</details> <details class="request-body" open="open">
+				<summary>Request body (0 bytes)</summary>
+				
+				<pre><code></code></pre>
+				
+				
+			</details></td>
+	</tr>
+	<tr>
+		<th scope="row">Response</th>
+		<td><details open="open">
+				<summary>Status line and header section (572 bytes)</summary>
+				
+				<pre><code>HTTP/1.1 200
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+Content-Security-Policy: default-src &#39;self&#39;; img-src &#39;self&#39; data:; style-src &#39;self&#39; &#39;unsafe-inline&#39;; script-src &#39;self&#39; &#39;unsafe-inline&#39;; font-src &#39;self&#39; data:; connect-src &#39;self&#39;; frame-ancestors &#39;none&#39;
+X-XSS-Protection: 1; mode=block
+Referrer-Policy: strict-origin-when-cross-origin
+Vary: origin,access-control-request-method,access-control-request-headers,accept-encoding
+Content-Type: text/html;charset=UTF-8
+Content-Language: zh-CN
+Date: Fri, 09 Oct 2026 05:57:08 GMT
+content-length: 6579
+
+</code></pre>
+				
+				
+			</details> <details class="response-body">
+				<summary>Response body (6579 bytes)</summary>
+				
+				<pre><code>&lt;script&gt;
+document.addEventListener(&#39;DOMContentLoaded&#39;, function () {
+    const tabSms = document.getElementById(&#39;tabSms&#39;);
+    const tabPwd = document.getElementById(&#39;tabPwd&#39;);
+    const panelSms = document.getElementById(&#39;panelSms&#39;);
+    const panelPwd = document.getElementById(&#39;panelPwd&#39;);
+    const msgBox = document.getElementById(&#39;msgBox&#39;);
+
+    const smsPhone = document.getElementById(&#39;smsPhone&#39;);
+    const smsCode = document.getElementById(&#39;smsCode&#39;);
+    const sendCodeBtn = document.getElementById(&#39;sendCodeBtn&#39;);
+    const smsLoginBtn = document.getElementById(&#39;smsLoginBtn&#39;);
+
+    const pwdUsername = document.getElementById(&#39;pwdUsername&#39;);
+    const pwdPassword = document.getElementById(&#39;pwdPassword&#39;);
+    const pwdLoginBtn = document.getElementById(&#39;pwdLoginBtn&#39;);
+
+    let countdown = 0;
+    let timer = null;
+
+    function showMsg(text, type) {
+        msgBox.textContent = text;
+        msgBox.className = &#39;msg &#39; + type;
+    }
+    function hideMsg() { msgBox.className = &#39;msg&#39;; }
+
+    // Tab
+    tabSms.addEventListener(&#39;click&#39;, function () {
+        tabSms.classList.add(&#39;active&#39;); tabPwd.classList.remove(&#39;active&#39;);
+        panelSms.classList.add(&#39;active&#39;); panelPwd.classList.remove(&#39;active&#39;);
+        hideMsg();
+    });
+    tabPwd.addEventListener(&#39;click&#39;, function () {
+        tabPwd.classList.add(&#39;active&#39;); tabSms.classList.remove(&#39;active&#39;);
+        panelPwd.classList.add(&#39;active&#39;); panelSms.classList.remove(&#39;active&#39;);
+        hideMsg();
+    });
+
+    // 手机验证码
+    function checkSendBtn() {
+        const phone = smsPhone.value.trim();
+        const valid = /^1[3-9]\d{9}$/.test(phone);
+        sendCodeBtn.disabled = !(valid &amp;&amp; countdown === 0);
+        sendCodeBtn.textContent = countdown &gt; 0 ? (countdown + &#39; 秒后重发&#39;) : &#39;发送验证码&#39;;
+    }
+    function checkSmsLoginBtn() {
+        const vp = /^1[3-9]\d{9}$/.test(smsPhone.value.trim());
+        const vc = /^\d{6}$/.test(smsCode.value.trim());
+        smsLoginBtn.disabled = !(vp &amp;&amp; vc);
+    }
+    smsPhone.addEventListener(&#39;input&#39;, function () { checkSendBtn(); checkSmsLoginBtn(); });
+    smsCode.addEventListener(&#39;input&#39;, checkSmsLoginBtn);
+    checkSendBtn();
+    checkSmsLoginBtn();
+
+    // ★ 发送验证码：后端返回 code → alert 显示 → 自动填入
+    sendCodeBtn.addEventListener(&#39;click&#39;, function () {
+        const phone = smsPhone.value.trim();
+        if (!/^1[3-9]\d{9}$/.test(phone)) { showMsg(&#39;请输入正确的手机号&#39;, &#39;error&#39;); return; }
+        sendCodeBtn.disabled = true;
+
+        fetch(&#39;/api/user/send-sms&#39;, {
+            method: &#39;POST&#39;,
+            headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+            body: JSON.stringify({ phone: phone })
+        })
+        .then(r =&gt; r.json())
+        .then(result =&gt; {
+            if (result.code !== 200) throw new Error(result.message);
+            const code = result.data;
+
+            // ★ 弹窗显示
+            alert(&#39;【演示环境】\n您的验证码是：&#39; + code + &#39;\n\n已自动填入。&#39;);
+            smsCode.value = code;
+            checkSmsLoginBtn();
+
+            countdown = 60;
+            checkSendBtn();
+            timer = setInterval(function () {
+                countdown--;
+                checkSendBtn();
+                if (countdown &lt;= 0) { clearInterval(timer); checkSendBtn(); }
+            }, 1000);
+        })
+        .catch(err =&gt; {
+            showMsg(err.message || &#39;发送失败&#39;, &#39;error&#39;);
+            sendCodeBtn.disabled = false;
+            checkSendBtn();
+        });
+    });
+
+    // 短信登录
+    smsLoginBtn.addEventListener(&#39;click&#39;, doSmsLogin);
+    function doSmsLogin() {
+        const phone = smsPhone.value.trim();
+        const code = smsCode.value.trim();
+        if (!/^1[3-9]\d{9}$/.test(phone)) { showMsg(&#39;请输入正确的手机号&#39;, &#39;error&#39;); return; }
+        if (!/^\d{6}$/.test(code)) { showMsg(&#39;请输入 6 位验证码&#39;, &#39;error&#39;); return; }
+
+        smsLoginBtn.disabled = true;
+        smsLoginBtn.textContent = &#39;登录中...&#39;;
+
+        fetch(&#39;/api/user/login-sms&#39;, {
+            method: &#39;POST&#39;,
+            headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+            body: JSON.stringify({ phone: phone, code: code })
+        })
+        .then(r =&gt; r.json())
+        .then(result =&gt; {
+            if (result.code !== 200) throw new Error(result.message);
+            showMsg(&#39;登录成功，跳转中...&#39;, &#39;success&#39;);
+            setTimeout(() =&gt; {
+                const back = sessionStorage.getItem(&#39;loginBack&#39;) || &#39;/&#39;;
+                sessionStorage.removeItem(&#39;loginBack&#39;);
+                window.location.href = back;
+            }, 700);
+        })
+        .catch(err =&gt; {
+            showMsg(err.message || &#39;登录失败&#39;, &#39;error&#39;);
+            smsLoginBtn.disabled = false;
+            smsLoginBtn.textContent = &#39;登录 / 注册&#39;;
+            checkSmsLoginBtn();
+        });
+    }
+
+    // 账号密码
+    function checkPwdLoginBtn() {
+        const u = pwdUsername.value.trim();
+        const p = pwdPassword.value.trim();
+        pwdLoginBtn.disabled = !(u &amp;&amp; p);
+    }
+    pwdUsername.addEventListener(&#39;input&#39;, checkPwdLoginBtn);
+    pwdPassword.addEventListener(&#39;input&#39;, checkPwdLoginBtn);
+    checkPwdLoginBtn();
+
+    pwdLoginBtn.addEventListener(&#39;click&#39;, function () {
+        const username = pwdUsername.value.trim();
+        const password = pwdPassword.value.trim();
+        if (!username || !password) { showMsg(&#39;请填写用户名和密码&#39;, &#39;error&#39;); return; }
+
+        pwdLoginBtn.disabled = true;
+        pwdLoginBtn.textContent = &#39;登录中...&#39;;
+
+        fetch(&#39;/api/user/login&#39;, {
+            method: &#39;POST&#39;,
+            headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+            body: JSON.stringify({ username: username, password: password })
+        })
+        .then(r =&gt; r.json())
+        .then(result =&gt; {
+            if (result.code !== 200) throw new Error(result.message);
+            showMsg(&#39;登录成功，跳转中...&#39;, &#39;success&#39;);
+            setTimeout(() =&gt; {
+                const back = sessionStorage.getItem(&#39;loginBack&#39;) || &#39;/&#39;;
+                sessionStorage.removeItem(&#39;loginBack&#39;);
+                window.location.href = back;
+            }, 700);
+        })
+        .catch(err =&gt; {
+            showMsg(err.message || &#39;登录失败&#39;, &#39;error&#39;);
+            pwdLoginBtn.disabled = false;
+            pwdLoginBtn.textContent = &#39;登录&#39;;
+            checkPwdLoginBtn();
+        });
+    });
+});
+&lt;/script&gt;</code></pre>
+				
+				
+			</details></td>
+	</tr>
+	
+	
+	<tr>
+		<th scope="row">Evidence</th>
+		<td><pre><code>&lt;script&gt;
+document.addEventListener(&#39;DOMContentLoaded&#39;, function () {
+    const tabSms = document.getElementById(&#39;tabSms&#39;);
+    const tabPwd = document.getElementById(&#39;tabPwd&#39;);
+    const panelSms = document.getElementById(&#39;panelSms&#39;);
+    const panelPwd = document.getElementById(&#39;panelPwd&#39;);
+    const msgBox = document.getElementById(&#39;msgBox&#39;);
+
+    const smsPhone = document.getElementById(&#39;smsPhone&#39;);
+    const smsCode = document.getElementById(&#39;smsCode&#39;);
+    const sendCodeBtn = document.getElementById(&#39;sendCodeBtn&#39;);
+    const smsLoginBtn = document.getElementById(&#39;smsLoginBtn&#39;);
+
+    const pwdUsername = document.getElementById(&#39;pwdUsername&#39;);
+    const pwdPassword = document.getElementById(&#39;pwdPassword&#39;);
+    const pwdLoginBtn = document.getElementById(&#39;pwdLoginBtn&#39;);
+
+    let countdown = 0;
+    let timer = null;
+
+    function showMsg(text, type) {
+        msgBox.textContent = text;
+        msgBox.className = &#39;msg &#39; + type;
+    }
+    function hideMsg() { msgBox.className = &#39;msg&#39;; }
+
+    // Tab
+    tabSms.addEventListener(&#39;click&#39;, function () {
+        tabSms.classList.add(&#39;active&#39;); tabPwd.classList.remove(&#39;active&#39;);
+        panelSms.classList.add(&#39;active&#39;); panelPwd.classList.remove(&#39;active&#39;);
+        hideMsg();
+    });
+    tabPwd.addEventListener(&#39;click&#39;, function () {
+        tabPwd.classList.add(&#39;active&#39;); tabSms.classList.remove(&#39;active&#39;);
+        panelPwd.classList.add(&#39;active&#39;); panelSms.classList.remove(&#39;active&#39;);
+        hideMsg();
+    });
+
+    // 手机验证码
+    function checkSendBtn() {
+        const phone = smsPhone.value.trim();
+        const valid = /^1[3-9]\d{9}$/.test(phone);
+        sendCodeBtn.disabled = !(valid &amp;&amp; countdown === 0);
+        sendCodeBtn.textContent = countdown &gt; 0 ? (countdown + &#39; 秒后重发&#39;) : &#39;发送验证码&#39;;
+    }
+    function checkSmsLoginBtn() {
+        const vp = /^1[3-9]\d{9}$/.test(smsPhone.value.trim());
+        const vc = /^\d{6}$/.test(smsCode.value.trim());
+        smsLoginBtn.disabled = !(vp &amp;&amp; vc);
+    }
+    smsPhone.addEventListener(&#39;input&#39;, function () { checkSendBtn(); checkSmsLoginBtn(); });
+    smsCode.addEventListener(&#39;input&#39;, checkSmsLoginBtn);
+    checkSendBtn();
+    checkSmsLoginBtn();
+
+    // ★ 发送验证码：后端返回 code → alert 显示 → 自动填入
+    sendCodeBtn.addEventListener(&#39;click&#39;, function () {
+        const phone = smsPhone.value.trim();
+        if (!/^1[3-9]\d{9}$/.test(phone)) { showMsg(&#39;请输入正确的手机号&#39;, &#39;error&#39;); return; }
+        sendCodeBtn.disabled = true;
+
+        fetch(&#39;/api/user/send-sms&#39;, {
+            method: &#39;POST&#39;,
+            headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+            body: JSON.stringify({ phone: phone })
+        })
+        .then(r =&gt; r.json())
+        .then(result =&gt; {
+            if (result.code !== 200) throw new Error(result.message);
+            const code = result.data;
+
+            // ★ 弹窗显示
+            alert(&#39;【演示环境】\n您的验证码是：&#39; + code + &#39;\n\n已自动填入。&#39;);
+            smsCode.value = code;
+            checkSmsLoginBtn();
+
+            countdown = 60;
+            checkSendBtn();
+            timer = setInterval(function () {
+                countdown--;
+                checkSendBtn();
+                if (countdown &lt;= 0) { clearInterval(timer); checkSendBtn(); }
+            }, 1000);
+        })
+        .catch(err =&gt; {
+            showMsg(err.message || &#39;发送失败&#39;, &#39;error&#39;);
+            sendCodeBtn.disabled = false;
+            checkSendBtn();
+        });
+    });
+
+    // 短信登录
+    smsLoginBtn.addEventListener(&#39;click&#39;, doSmsLogin);
+    function doSmsLogin() {
+        const phone = smsPhone.value.trim();
+        const code = smsCode.value.trim();
+        if (!/^1[3-9]\d{9}$/.test(phone)) { showMsg(&#39;请输入正确的手机号&#39;, &#39;error&#39;); return; }
+        if (!/^\d{6}$/.test(code)) { showMsg(&#39;请输入 6 位验证码&#39;, &#39;error&#39;); return; }
+
+        smsLoginBtn.disabled = true;
+        smsLoginBtn.textContent = &#39;登录中...&#39;;
+
+        fetch(&#39;/api/user/login-sms&#39;, {
+            method: &#39;POST&#39;,
+            headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+            body: JSON.stringify({ phone: phone, code: code })
+        })
+        .then(r =&gt; r.json())
+        .then(result =&gt; {
+            if (result.code !== 200) throw new Error(result.message);
+            showMsg(&#39;登录成功，跳转中...&#39;, &#39;success&#39;);
+            setTimeout(() =&gt; {
+                const back = sessionStorage.getItem(&#39;loginBack&#39;) || &#39;/&#39;;
+                sessionStorage.removeItem(&#39;loginBack&#39;);
+                window.location.href = back;
+            }, 700);
+        })
+        .catch(err =&gt; {
+            showMsg(err.message || &#39;登录失败&#39;, &#39;error&#39;);
+            smsLoginBtn.disabled = false;
+            smsLoginBtn.textContent = &#39;登录 / 注册&#39;;
+            checkSmsLoginBtn();
+        });
+    }
+
+    // 账号密码
+    function checkPwdLoginBtn() {
+        const u = pwdUsername.value.trim();
+        const p = pwdPassword.value.trim();
+        pwdLoginBtn.disabled = !(u &amp;&amp; p);
+    }
+    pwdUsername.addEventListener(&#39;input&#39;, checkPwdLoginBtn);
+    pwdPassword.addEventListener(&#39;input&#39;, checkPwdLoginBtn);
+    checkPwdLoginBtn();
+
+    pwdLoginBtn.addEventListener(&#39;click&#39;, function () {
+        const username = pwdUsername.value.trim();
+        const password = pwdPassword.value.trim();
+        if (!username || !password) { showMsg(&#39;请填写用户名和密码&#39;, &#39;error&#39;); return; }
+
+        pwdLoginBtn.disabled = true;
+        pwdLoginBtn.textContent = &#39;登录中...&#39;;
+
+        fetch(&#39;/api/user/login&#39;, {
+            method: &#39;POST&#39;,
+            headers: { &#39;Content-Type&#39;: &#39;application/json&#39; },
+            body: JSON.stringify({ username: username, password: password })
+        })
+        .then(r =&gt; r.json())
+        .then(result =&gt; {
+            if (result.code !== 200) throw new Error(result.message);
+            showMsg(&#39;登录成功，跳转中...&#39;, &#39;success&#39;);
+            setTimeout(() =&gt; {
+                const back = sessionStorage.getItem(&#39;loginBack&#39;) || &#39;/&#39;;
+                sessionStorage.removeItem(&#39;loginBack&#39;);
+                window.location.href = back;
+            }, 700);
+        })
+        .catch(err =&gt; {
+            showMsg(err.message || &#39;登录失败&#39;, &#39;error&#39;);
+            pwdLoginBtn.disabled = false;
+            pwdLoginBtn.textContent = &#39;登录&#39;;
+            checkPwdLoginBtn();
+        });
+    });
+});
+&lt;/script&gt;</code></pre></td>
+	</tr>
+	<tr>
+		<th scope="row">Solution</th>
+		<td> 
+<p>This is an informational alert and so no changes are required.</p>
+ </td>
+	</tr>
+</table>
+
+											</details></li>
+									</ol>
+								</li>
+								
+							</ol>
+						</li>
+						
+					</ol>
+				</li>
+				
+				
+				  
+			</ol>
+		</section>
+
+		<section id="appendix" class="appendix">
+			<h2>Appendix</h2>
+
+			<section id="alert-types" class="alert-types">
+				<h3>Alert Types</h3>
+				<p class="alert-types-intro">This section contains additional information on the types of alerts in the report.</p>
+				<ol>
+					<li
+						id="alert-type-0">
+						<h4>CSP: Failure to Define Directive with No Fallback</h4>
+						<table class="alert-types-table">
+							<tr>
+								<th scope="row">Source</th>
+								<td>
+									
+									   <span>raised by a passive scanner</span> <span>(<a
+										href="https://www.zaproxy.org/docs/alerts/10055/">CSP</a>)
+									</span>   
+								</td>
+							</tr>
+							<tr>
+								<th scope="row">CWE ID</th>
+								<td><a
+									href="https://cwe.mitre.org/data/definitions/693.html">693</a></td>
+							</tr>
+							<tr>
+								<th scope="row">WASC ID</th>
+								<td>15</td>
+							</tr>
+							<tr>
+								<th scope="row">Reference</th>
+								<td>
+									<ol>
+										<li><a
+											href="https://www.w3.org/TR/CSP/">https://www.w3.org/TR/CSP/</a></li>
+										<li><a
+											href="https://caniuse.com/#search=content+security+policy">https://caniuse.com/#search=content+security+policy</a></li>
+										<li><a
+											href="https://content-security-policy.com/">https://content-security-policy.com/</a></li>
+										<li><a
+											href="https://github.com/HtmlUnit/htmlunit-csp">https://github.com/HtmlUnit/htmlunit-csp</a></li>
+										<li><a
+											href="https://web.dev/articles/csp#resource-options">https://web.dev/articles/csp#resource-options</a></li>
+									</ol>
+								</td>
+							</tr>
+						</table>
+					</li>
+					<li
+						id="alert-type-1">
+						<h4>CSP: script-src 不安全-内联</h4>
+						<table class="alert-types-table">
+							<tr>
+								<th scope="row">Source</th>
+								<td>
+									
+									   <span>raised by a passive scanner</span> <span>(<a
+										href="https://www.zaproxy.org/docs/alerts/10055/">CSP</a>)
+									</span>   
+								</td>
+							</tr>
+							<tr>
+								<th scope="row">CWE ID</th>
+								<td><a
+									href="https://cwe.mitre.org/data/definitions/693.html">693</a></td>
+							</tr>
+							<tr>
+								<th scope="row">WASC ID</th>
+								<td>15</td>
+							</tr>
+							<tr>
+								<th scope="row">Reference</th>
+								<td>
+									<ol>
+										<li><a
+											href="https://www.w3.org/TR/CSP/">https://www.w3.org/TR/CSP/</a></li>
+										<li><a
+											href="https://caniuse.com/#search=content+security+policy">https://caniuse.com/#search=content+security+policy</a></li>
+										<li><a
+											href="https://content-security-policy.com/">https://content-security-policy.com/</a></li>
+										<li><a
+											href="https://github.com/HtmlUnit/htmlunit-csp">https://github.com/HtmlUnit/htmlunit-csp</a></li>
+										<li><a
+											href="https://web.dev/articles/csp#resource-options">https://web.dev/articles/csp#resource-options</a></li>
+									</ol>
+								</td>
+							</tr>
+						</table>
+					</li>
+					<li
+						id="alert-type-2">
+						<h4>CSP: style-src 不安全-内联</h4>
+						<table class="alert-types-table">
+							<tr>
+								<th scope="row">Source</th>
+								<td>
+									
+									   <span>raised by a passive scanner</span> <span>(<a
+										href="https://www.zaproxy.org/docs/alerts/10055/">CSP</a>)
+									</span>   
+								</td>
+							</tr>
+							<tr>
+								<th scope="row">CWE ID</th>
+								<td><a
+									href="https://cwe.mitre.org/data/definitions/693.html">693</a></td>
+							</tr>
+							<tr>
+								<th scope="row">WASC ID</th>
+								<td>15</td>
+							</tr>
+							<tr>
+								<th scope="row">Reference</th>
+								<td>
+									<ol>
+										<li><a
+											href="https://www.w3.org/TR/CSP/">https://www.w3.org/TR/CSP/</a></li>
+										<li><a
+											href="https://caniuse.com/#search=content+security+policy">https://caniuse.com/#search=content+security+policy</a></li>
+										<li><a
+											href="https://content-security-policy.com/">https://content-security-policy.com/</a></li>
+										<li><a
+											href="https://github.com/HtmlUnit/htmlunit-csp">https://github.com/HtmlUnit/htmlunit-csp</a></li>
+										<li><a
+											href="https://web.dev/articles/csp#resource-options">https://web.dev/articles/csp#resource-options</a></li>
+									</ol>
+								</td>
+							</tr>
+						</table>
+					</li>
+					<li
+						id="alert-type-3">
+						<h4>Information Disclosure - Suspicious Comments</h4>
+						<table class="alert-types-table">
+							<tr>
+								<th scope="row">Source</th>
+								<td>
+									
+									   <span>raised by a passive scanner</span> <span>(<a
+										href="https://www.zaproxy.org/docs/alerts/10027/">Information Disclosure - Suspicious Comments</a>)
+									</span>   
+								</td>
+							</tr>
+							<tr>
+								<th scope="row">CWE ID</th>
+								<td><a
+									href="https://cwe.mitre.org/data/definitions/615.html">615</a></td>
+							</tr>
+							<tr>
+								<th scope="row">WASC ID</th>
+								<td>13</td>
+							</tr>
+							
+						</table>
+					</li>
+					<li
+						id="alert-type-4">
+						<h4>现代 Web 应用程序</h4>
+						<table class="alert-types-table">
+							<tr>
+								<th scope="row">Source</th>
+								<td>
+									
+									   <span>raised by a passive scanner</span> <span>(<a
+										href="https://www.zaproxy.org/docs/alerts/10109/">现代 Web 应用程序</a>)
+									</span>   
+								</td>
+							</tr>
+							
+							
+							
+						</table>
+					</li>
+				</ol>
+			</section>
+		</section>
+		 
+	</main>
+</body>
+</html>
+
+
+
