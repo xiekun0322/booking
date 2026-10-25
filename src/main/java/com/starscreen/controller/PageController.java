@@ -1,5 +1,16 @@
 package com.starscreen.controller;
 
+import java.time.LocalDate;
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
 import com.starscreen.entity.Movie;
 import com.starscreen.entity.Order;
 import com.starscreen.entity.Schedule;
@@ -9,18 +20,9 @@ import com.starscreen.repository.ScheduleRepository;
 import com.starscreen.service.AdminService;
 import com.starscreen.service.OrderService;
 import com.starscreen.service.SidebarService;
+
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-
-import java.time.LocalDate;
-import java.util.List;
 
 /**
  * 【功能】页面控制器。
@@ -90,12 +92,10 @@ public class PageController {
     public String cinemas(@PathVariable Long movieId, Model model) {
         model.addAttribute("movie", movieRepository.findById(movieId).orElse(null));
 
-        // ★ 只显示今天及以后的场次
+        // 把过滤条件直接交给数据库，一步到位
         String today = LocalDate.now().toString();
-        List<Schedule> schedules = scheduleRepository.findByMovieId(movieId)
-                .stream()
-                .filter(s -> s.getDate() != null && s.getDate().compareTo(today) >= 0)
-                .toList();
+        List<Schedule> schedules = scheduleRepository.findByMovieIdAndDateGreaterThanEqual(movieId, today);
+        
         model.addAttribute("schedules", schedules);
         return "cinemas";
     }

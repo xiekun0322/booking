@@ -5,6 +5,8 @@ import com.starscreen.dto.*;
 import com.starscreen.entity.User;
 import com.starscreen.service.SmsService;
 import com.starscreen.service.UserService;
+
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,26 +28,47 @@ public class UserController {
 
     /** 账号密码登录 */
     @PostMapping("/login")
-    public Result<UserVO> login(@RequestBody @Valid LoginRequest req, HttpSession session) {
-        User user = userService.login(req);
-        writeSession(session, user);
+    public Result<UserVO> login(@RequestBody @Valid LoginRequest req, HttpServletRequest request) {
+        // 1. 调用专门的账号密码登录逻辑（UserService 里应该有对应的方法）
+        User user = userService.login(req.getUsername(), req.getPassword()); 
+        
+        // 2. 核心防御：刷新 Session
+        if (request.getSession(false) != null) {
+            request.changeSessionId();
+        }
+        HttpSession newSession = request.getSession(true);
+        writeSession(newSession, user);
+        
         return Result.success(UserVO.from(user));
     }
 
-    /** 短信验证码登录 */
+    /** 短信验证码登录 */  
     @PostMapping("/login-sms")
-    public Result<UserVO> loginBySms(@RequestBody @Valid SmsLoginRequest req, HttpSession session) {
+    public Result<UserVO> loginSms(@RequestBody @Valid SmsLoginRequest req, HttpServletRequest request) { 
+        // 注意这里：把 HttpSession 换成 HttpServletRequest
+        
         smsService.verifyCode(req.getPhone(), req.getCode());
         User user = userService.loginOrRegisterByPhone(req.getPhone());
-        writeSession(session, user);
+        
+        // 核心防御：登录成功后，强制刷新 Session ID
+        // 这样即使黑客提前在用户浏览器里塞了一个已知的 SessionID，也会在这一刻失效
+        if (request.getSession(false) != null) {
+            request.changeSessionId();
+        }
+        HttpSession newSession = request.getSession(true); // 获取刷新后的 Session
+        
+        writeSession(newSession, user); // 把用户信息写入新的 Session
         return Result.success(UserVO.from(user));
     }
 
-    /** 发送短信验证码（返回验证码，仅演示环境） */
+    /** 发送短信验证码 */
     @PostMapping("/send-sms")
-    public Result<String> sendSms(@RequestBody @Valid SendSmsRequest req) {
-        String code = smsService.sendCode(req.getPhone());
-        return Result.success(code);
+    public Result<Void> sendSms(@RequestBody @Valid SendSmsRequest req) {
+        // 1. 调用底层服务去生成验证码，并真正发送到用户手机上（或者存入 Redis）
+        smsService.sendCode(req.getPhone());
+        
+        // 2. 绝对不能返回 code！只给前端返回一个成功的状态
+        return Result.success("验证码已发送，请注意查收", null);
     }
 
     /** 绑定账号密码 */

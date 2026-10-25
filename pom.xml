@@ -72,6 +72,26 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        
+        <!-- Redis Starter -->
+        <dependency>
+    		<groupId>org.springframework.boot</groupId>
+    		<artifactId>spring-boot-starter-data-redis</artifactId>
+		</dependency>	
+        
+        <!-- RabbitMQ Starter -->
+        <dependency>
+    		<groupId>org.springframework.boot</groupId>
+    		<artifactId>spring-boot-starter-amqp</artifactId>
+		</dependency>
+		
+		<!-- jsoup -->
+		<dependency>
+    		<groupId>org.jsoup</groupId>
+    		<artifactId>jsoup</artifactId>
+    		<version>1.17.2</version>
+		</dependency>
+        
     </dependencies>
 
     <build>

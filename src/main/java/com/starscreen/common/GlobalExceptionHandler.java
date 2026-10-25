@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import jakarta.validation.ConstraintViolationException;
+
 /**
  * 【功能】全局异常处理器。
  *         统一捕获所有 Controller 抛出的异常，转换成 Result JSON 返回给前端，
@@ -93,5 +95,15 @@ public class GlobalExceptionHandler {
     public Result<Void> handleException(Exception e) {
         log.error("系统异常", e);
         return Result.error(500, "系统繁忙，请稍后重试");
+    }
+    
+    /**
+     * 【新增】处理 @RequestParam / @PathVariable 参数校验异常
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public Result<Void> handleConstraintViolation(ConstraintViolationException e) {
+        // 提取出 @Max 里的 message
+        String msg = e.getConstraintViolations().iterator().next().getMessage();
+        return Result.error(400, msg);
     }
 }

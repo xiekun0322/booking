@@ -87,4 +87,9 @@ public class Result<T> {
     public static <T> Result<T> error(String message) {
         return new Result<>(500, message, null);
     }
+
+	public static Result<Void> success(String string, Object object) {
+		// TODO 自动生成的方法存根
+		return null;
+	}
 }

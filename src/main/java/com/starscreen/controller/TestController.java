@@ -4,6 +4,8 @@ import com.starscreen.common.Result;
 import com.starscreen.dto.SidebarData;
 import com.starscreen.service.SidebarService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
+@Profile("dev") // 核心防御：仅当激活 dev 环境时，这个 Controller 才会生效
 public class TestController {
 
     private final SidebarService sidebarService;

@@ -44,4 +44,9 @@ public class CreateOrderRequest {
     @NotEmpty(message = "请至少选择一个座位")
     @Size(max = 6, message = "一次最多选择 6 个座位")
     private List<String> seats;
+
+	public String getCaptchaTicket() {
+		// TODO 自动生成的方法存根
+		return null;
+	}
 }

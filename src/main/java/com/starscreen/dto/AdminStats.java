@@ -2,6 +2,7 @@ package com.starscreen.dto;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -44,7 +45,7 @@ public class AdminStats {
     private long cancelledOrders;
 
     /** 累计票房（SUM(totalPrice) WHERE status='paid'） */
-    private Double totalRevenue;
+    private BigDecimal totalRevenue;
 
     /** 热销 TOP 电影：每项 = [电影名, 票房, 订单数]，按票房倒序 */
     private List<Object[]> topMovies;

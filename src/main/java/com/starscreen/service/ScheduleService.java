@@ -3,6 +3,10 @@ package com.starscreen.service;
 import com.starscreen.common.BusinessException;
 import com.starscreen.entity.Schedule;
 import com.starscreen.repository.ScheduleRepository;
+import com.starscreen.repository.SeatRepository;
+
+import lombok.RequiredArgsConstructor;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,12 +29,14 @@ import org.springframework.transaction.annotation.Transactional;
  *          - BusinessException     校验失败时抛出
  */
 @Service
+@RequiredArgsConstructor
 public class ScheduleService {
 
     private static final Logger log = LoggerFactory.getLogger(ScheduleService.class);
-
+    
     @Autowired
-    private ScheduleRepository scheduleRepository;
+    private final ScheduleRepository scheduleRepository;
+    private final SeatRepository seatRepository;
 
     // ==================== 查询 ====================
 
@@ -115,8 +121,13 @@ public class ScheduleService {
     public void delete(Long id) {
         Schedule schedule = scheduleRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("场次不存在"));
+
+        // 【核心修复】：先删座位，再删排期
+        int deletedSeats = seatRepository.deleteByScheduleId(id);
+        log.info("清理场次 {} 的关联座位共 {} 个", id, deletedSeats);
+
         scheduleRepository.delete(schedule);
-        log.info("删除场次：id={}", id);
+        log.info("删除场次成功：id={}", id);
     }
 
     /**

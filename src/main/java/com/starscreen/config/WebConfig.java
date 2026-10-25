@@ -13,10 +13,19 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Autowired
     private AdminInterceptor adminInterceptor;
+    
+    @Autowired
+    private AntiReplayInterceptor antiReplayInterceptor; // 🚨 注入防重放拦截器
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        // 1. 登录拦截
+        
+        // 1. 🚨 注册防重放拦截器 (只拦截写操作的订单接口，保护下单和支付)
+        // 注意：放在最前面，让恶意重放请求最快被拦截，节省系统资源
+        registry.addInterceptor(antiReplayInterceptor)
+                .addPathPatterns("/api/orders/**");
+
+        // 2. 登录拦截
         registry.addInterceptor(loginInterceptor)
                 .addPathPatterns("/api/**")
                 .excludePathPatterns(
@@ -32,7 +41,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "/api/cinemas/**"
                 );
 
-        // 2. ★ 管理员拦截（在登录拦截之后）
+        // 3. 管理员拦截（在登录拦截之后）
         registry.addInterceptor(adminInterceptor)
                 .addPathPatterns("/api/admin/**", "/admin/**");
     }

@@ -3,11 +3,14 @@ package com.starscreen.service;
 import com.starscreen.common.BusinessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 【功能】模拟短信验证码服务。
@@ -29,19 +32,26 @@ public class SmsService {
      * 【功能】发送验证码（模拟）。
      * 【返回值】★ 验证码明文（演示环境用，生产环境应返回 void）
      */
-    public String sendCode(String phone) {
-        String code = String.format("%06d", random.nextInt(1000000));
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
-        codeStore.put(phone, new CodeEntry(code, System.currentTimeMillis() + CODE_TTL_MS));
+    public void sendCode(String phone) {
+        // 🚨 防刷机制：同一个手机号，1 分钟内只能发 1 次
+        String limitKey = "sms:limit:" + phone;
+        Boolean isAllowed = redisTemplate.opsForValue().setIfAbsent(limitKey, "1", 1, TimeUnit.MINUTES);
+        
+        if (Boolean.FALSE.equals(isAllowed)) {
+            throw new BusinessException("发送太频繁，请1分钟后再试");
+        }
 
-        log.info("========================================");
-        log.info("★ 模拟短信发送");
-        log.info("  手机号：{}", phone);
-        log.info("  验证码：{}", code);
-        log.info("  有效期：5 分钟");
-        log.info("========================================");
+        // 生成 6 位随机验证码
+        String code = String.format("%06d", new java.util.Random().nextInt(1000000));
+        
+        // 存入 Redis，设置 5 分钟过期
+        redisTemplate.opsForValue().set("sms:code:" + phone, code, 5, TimeUnit.MINUTES);
 
-        return code;   // ★ 返回验证码
+        // 这里调用真正的第三方短信网关（目前用控制台打印模拟）
+        System.out.println("[模拟发送短信] 给 " + phone + " 发送验证码：" + code);
     }
 
     /**
@@ -70,4 +80,9 @@ public class SmsService {
             this.expireAt = expireAt;
         }
     }
+
+	public boolean verifyCaptcha(String captchaTicket) {
+		// TODO 自动生成的方法存根
+		return false;
+	}
 }

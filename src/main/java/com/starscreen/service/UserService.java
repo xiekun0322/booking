@@ -164,26 +164,37 @@ public class UserService {
     }
 
     // ==================== 注销账号（软删除）====================
-
+    /**
+     * 注销账号（软删除 + 释放唯一索引）
+     */
+    
     @Transactional
     public void deleteAccount(Long userId, String password) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException("用户不存在"));
 
-        if (Boolean.TRUE.equals(user.getDeleted())) {
-            throw new BusinessException("该账号已注销");
-        }
-
-        // ★ 保持原逻辑：有密码才校验，无密码跳过
+        // 1. 校验密码是否正确（防止别人乱注销你的号）
         if (user.getPassword() != null && !user.getPassword().isEmpty()) {
             if (!PASSWORD_ENCODER.matches(password, user.getPassword())) {
-                throw new BusinessException("密码错误");
+                throw new BusinessException("密码错误，无法注销");
             }
         }
 
+        // 2. 软删除
         user.setDeleted(true);
+
+        // 3. 腾出唯一索引（加上时间戳后缀）
+        long timestamp = System.currentTimeMillis();
+        String oldUsername = user.getUsername();
+        String safeUsername = oldUsername.length() > 20 ? oldUsername.substring(0, 20) : oldUsername;
+        user.setUsername(safeUsername + "_del_" + timestamp);
+        
+        if (user.getPhone() != null) {
+            user.setPhone("del_" + timestamp + "_" + user.getPhone());
+        }
+
         userRepository.save(user);
-        log.info("用户注销账号（软删除）：id={}, username={}", userId, user.getUsername());
+        log.info("用户注销成功：id={}", userId);
     }
 
     // ==================== 查询 ====================
@@ -191,4 +202,9 @@ public class UserService {
     public User getById(Long id) {
         return userRepository.findById(id).orElse(null);
     }
+
+	public User login(String username, String password) {
+		// TODO 自动生成的方法存根
+		return null;
+	}
 }
