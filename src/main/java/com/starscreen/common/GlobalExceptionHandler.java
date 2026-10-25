@@ -106,4 +106,14 @@ public class GlobalExceptionHandler {
         String msg = e.getConstraintViolations().iterator().next().getMessage();
         return Result.error(400, msg);
     }
+    
+    /**
+     * 【功能】处理雪花算法时钟回拨异常
+     */
+    @ExceptionHandler(ClockBackwardsException.class)
+    public Result<Void> handleClockBackwards(ClockBackwardsException e) {
+        // 这种通常属于系统级灾难，需要打 Error 级别的日志，引起运维警觉！
+        log.error("生成分布式ID失败，系统时钟发生回拨：{}", e.getMessage(), e);
+        return Result.error(500, "系统繁忙，请稍后重试（时间同步中）");
+    }
 }

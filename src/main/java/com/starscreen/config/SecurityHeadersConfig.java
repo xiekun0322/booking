@@ -82,25 +82,3 @@ public class SecurityHeadersConfig {
         return registration;
     }
 }
-
-//紧急且重要（立即修复）：
-//
-//评估并移除 CSP 中的 'unsafe-inline'，改用 Nonce/Hash。
-//
-//补充 object-src 'none', base-uri 'self', form-action 'self'。
-//
-//将 X-XSS-Protection 设为 0 或移除。
-//
-//重要（近期规划）：
-//
-//引入 Spring Security，使用标准的 .headers() 配置。
-//
-//增加 HSTS、Permissions-Policy、COOP/COEP/CORP 头部。
-//
-//将配置外置到 application.yml。
-//
-//优化（中长期）：
-//
-//在 Nginx/CDN 层同步配置安全头，减轻 Java 应用层压力。
-//
-//区分 API 路由和页面路由，实施差异化的安全头策略。

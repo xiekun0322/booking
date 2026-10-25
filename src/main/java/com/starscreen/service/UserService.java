@@ -24,6 +24,8 @@ public class UserService {
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
     private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final BCryptPasswordEncoder PASSWORD_ENCODER = new BCryptPasswordEncoder();
+    private static final String MSG_LOGIN_ERROR = "用户名或密码错误";
+    private static final String MSG_USER_NOT_FOUND = "用户不存在";
 
     private final UserRepository userRepository;
 
@@ -68,14 +70,14 @@ public class UserService {
 
     public User login(LoginRequest req) {
         User user = userRepository.findByUsernameAndDeletedFalse(req.getUsername())
-                .orElseThrow(() -> new BusinessException("用户名或密码错误"));
+                .orElseThrow(() -> new BusinessException(MSG_LOGIN_ERROR));
 
         if (user.getPassword() == null || user.getPassword().isEmpty()) {
             throw new BusinessException("该账号未绑定密码，请使用手机号验证码登录");
         }
 
         if (!PASSWORD_ENCODER.matches(req.getPassword(), user.getPassword())) {
-            throw new BusinessException("用户名或密码错误");
+            throw new BusinessException(MSG_LOGIN_ERROR);
         }
 
         log.info("账号密码登录成功：id={}, username={}", user.getId(), user.getUsername());
@@ -107,7 +109,7 @@ public class UserService {
     @Transactional
     public User bindAccount(Long userId, BindAccountRequest req) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException("用户不存在"));
+                .orElseThrow(() -> new BusinessException(MSG_USER_NOT_FOUND));
 
         if (user.getPassword() != null && !user.getPassword().isEmpty()) {
             throw new BusinessException("该账号已绑定密码，请直接使用账号密码登录");
@@ -144,7 +146,7 @@ public class UserService {
     @Transactional
     public void changePassword(Long userId, String oldPassword, String newPassword) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException("用户不存在"));
+                .orElseThrow(() -> new BusinessException(MSG_USER_NOT_FOUND));
 
         if (user.getPassword() == null || user.getPassword().isEmpty()) {
             throw new BusinessException("该账号未设置密码，请先绑定账号");
@@ -171,13 +173,11 @@ public class UserService {
     @Transactional
     public void deleteAccount(Long userId, String password) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException("用户不存在"));
+                .orElseThrow(() -> new BusinessException(MSG_USER_NOT_FOUND));
 
         // 1. 校验密码是否正确（防止别人乱注销你的号）
-        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
-            if (!PASSWORD_ENCODER.matches(password, user.getPassword())) {
-                throw new BusinessException("密码错误，无法注销");
-            }
+        if (user.getPassword() != null && !user.getPassword().isEmpty() && !PASSWORD_ENCODER.matches(password, user.getPassword())) {
+            throw new BusinessException("密码错误，无法注销");
         }
 
         // 2. 软删除
@@ -203,8 +203,23 @@ public class UserService {
         return userRepository.findById(id).orElse(null);
     }
 
-	public User login(String username, String password) {
-		// TODO 自动生成的方法存根
-		return null;
-	}
+    public User login(String username, String password) {
+        // 1. 根据用户名去数据库查这个人（注意：绝对不能查已注销的人！）
+        User user = userRepository.findByUsernameAndDeletedFalse(username)
+                .orElseThrow(() -> new BusinessException(MSG_LOGIN_ERROR));
+
+        // 2. 校验密码（如果没有密码，说明是纯手机号注册用户，不能走账号密码登录）
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            throw new BusinessException("该账号未设置密码，请使用验证码登录");
+        }
+
+        // 3. 比对密码（用你项目里注入的 BCrypt 加密器）
+        if (!PASSWORD_ENCODER.matches(password, user.getPassword())) {
+            // 安全提示：不要提示“密码错误”，统一提示“用户名或密码错误”，防止黑客探测哪些用户名是存在的
+            throw new BusinessException(MSG_LOGIN_ERROR);
+        }
+
+        // 4. 登录成功，返回用户对象
+        return user;
+    }
 }

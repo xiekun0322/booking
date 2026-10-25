@@ -21,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.starscreen.common.BusinessException;
+import com.starscreen.common.RoleConstants;
+import com.starscreen.common.StatusConstants;
 import com.starscreen.config.RabbitMQConfig;
 import com.starscreen.entity.Movie;
 import com.starscreen.entity.Order;
@@ -80,7 +82,7 @@ public class OrderService {
     private static final int MAX_SEATS_PER_ORDER = 6;
 
     /** 订单号 / 取票码生成用的随机数 */
-    private static final Random RANDOM = new Random();
+    private static final java.security.SecureRandom RANDOM = new java.security.SecureRandom();
 
     private final OrderRepository orderRepository;
     private final SeatRepository seatRepository;
@@ -92,6 +94,8 @@ public class OrderService {
     private static final SnowflakeIdWorker snowflake = new SnowflakeIdWorker(1); // 机器id：1
     
     private final SmsService smsService; // 加上这行，因为类上面有 @RequiredArgsConstructor，它会自动注入
+    
+    private static final String MSG_ORDER_NOT_FOUND = "订单不存在";
     
     // ==================== 1. 下单锁座 ====================
 
@@ -133,31 +137,7 @@ public class OrderService {
     @Transactional
     public Order createOrder(Long userId, Long scheduleId, List<String> seatLabels, String captchaTicket) {
         // -------- 步骤 1：参数校验 --------
-        if (userId == null) throw new BusinessException("请先登录");
-        if (scheduleId == null) throw new BusinessException("场次 ID 不能为空");
-        if (seatLabels == null || seatLabels.isEmpty()) throw new BusinessException("请至少选择一个座位");
-        if (seatLabels.size() > MAX_SEATS_PER_ORDER)
-            throw new BusinessException("一次最多选择 " + MAX_SEATS_PER_ORDER + " 个座位");
-        
-        // 新增防御 C：座位去重校验
-        // 利用 Set 的特性，如果有重复，Set 的大小会小于 List 的大小
-        // 新增防御 C：座位去重校验（包含空格处理）
-        long distinctCount = seatLabels.stream().map(String::trim).distinct().count();
-        if (distinctCount != seatLabels.size()) {
-            throw new BusinessException("座位数据异常：请勿重复提交相同座位");
-        }
-
-        // 新增防御 A：人机验证（滑块）
-        // 假设你注入了一个验证码服务 smsService 或专门的 CaptchaService
-        if (captchaTicket == null || !smsService.verifyCaptcha(captchaTicket)) {
-            throw new BusinessException("人机验证失败，请重新滑动验证码");
-        }
-
-        // 新增防御 B：限制单用户未支付订单数（防黄牛占座）
-        long pendingCount = orderRepository.countByUserIdAndStatus(userId, "pending");
-        if (pendingCount >= 2) { // 阈值设为2，视具体业务调整
-            throw new BusinessException("您有未支付的订单，请先支付或取消后再购票");
-        }
+    	validateOrderParams(userId, scheduleId, seatLabels, captchaTicket);
 
         // -------- 步骤 2：查场次 --------
         Schedule schedule = scheduleRepository.findById(scheduleId)
@@ -170,7 +150,7 @@ public class OrderService {
             Seat seat = seatRepository
                     .findByScheduleIdAndRowNumAndColNum(scheduleId, rc[0], rc[1])
                     .orElseThrow(() -> new BusinessException("座位不存在：" + label));
-            if (!"available".equals(seat.getStatus()))
+            if (!StatusConstants.SEAT_AVAILABLE.equals(seat.getStatus()))
                 throw new BusinessException("座位已被选走：" + label);
             seats.add(seat);
         }
@@ -197,7 +177,7 @@ public class OrderService {
         BigDecimal totalPrice = unitPrice.multiply(seatCount).setScale(2, RoundingMode.HALF_UP);
         // 4. 赋值给订单
         order.setTotalPrice(totalPrice);
-        order.setStatus("pending");
+        order.setStatus(StatusConstants.PENDING);
      	// 【修改后】
         order.setCreateTime(LocalDateTime.now());
         // 拼装 LocalDateTime：假设 schedule 的 date 是 "2026-10-25"，startTime 是 "14:30"
@@ -236,7 +216,6 @@ public class OrderService {
         log.info("已发送订单延迟检查消息，orderId={}", order.getId());
 
         return order;
-        
     }
 
     // ==================== 2. 支付 ====================
@@ -247,12 +226,12 @@ public class OrderService {
     @Transactional
     public String createPayTransaction(Long userId, Long orderId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new BusinessException("订单不存在"));
+                .orElseThrow(() -> new BusinessException(MSG_ORDER_NOT_FOUND));
 
         if (!userId.equals(order.getUserId())) {
             throw new BusinessException("无权操作该订单");
         }
-        if (!"pending".equals(order.getStatus())) {
+        if (!StatusConstants.PENDING.equals(order.getStatus())) {
             throw new BusinessException("订单状态不允许支付：" + order.getStatus());
         }
 
@@ -273,7 +252,7 @@ public class OrderService {
         }
 
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new BusinessException("订单不存在"));
+                .orElseThrow(() -> new BusinessException(MSG_ORDER_NOT_FOUND));
 
         LocalDateTime now = LocalDateTime.now();
         
@@ -287,7 +266,6 @@ public class OrderService {
         }
 
         order.setPayTime(now);
-        order.setTicketCode(generateTicketCode());
         orderRepository.save(order);
 
         // 一条 SQL 批量更新座位状态，直接干掉循环
@@ -321,17 +299,17 @@ public class OrderService {
     @Transactional
     public Order cancel(Long userId, Long orderId) {
         Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new BusinessException("订单不存在"));
+                .orElseThrow(() -> new BusinessException(MSG_ORDER_NOT_FOUND));
 
         // 只要 userId 是 null，或者 userId 跟订单里的不对，统统赶走！
         if (userId == null || !userId.equals(order.getUserId())) {
             throw new BusinessException("无权操作该订单");
         }
 
-        if ("paid".equals(order.getStatus())) throw new BusinessException("已支付订单不可取消");
-        if ("cancelled".equals(order.getStatus())) return order;   // 幂等：已取消直接返回
+        if (StatusConstants.PAID.equals(order.getStatus())) throw new BusinessException("已支付订单不可取消");
+        if (StatusConstants.CANCELLED.equals(order.getStatus())) return order;   // 幂等：已取消直接返回
 
-        order.setStatus("cancelled");
+        order.setStatus(StatusConstants.CANCELLED);
         orderRepository.save(order);
         releaseSeats(order.getId());                                // 座位回 available
 
@@ -449,19 +427,15 @@ public class OrderService {
         return "MO" + snowflake.nextId();
     }
 
-    /**
-     * 【功能】生成取票码。
-     * 【格式】8 位字符，第 5 位是横线，如 "ABCD-1234"
-     * 【字符集】排除易混淆的 I/O/0/1，仅保留：
-     *          ABCDEFGHJKLMNPQRSTUVWXYZ23456789
-     */
-    private String generateTicketCode() {
-        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 8; i++) {
-            if (i == 4) sb.append('-');
-            sb.append(chars.charAt(RANDOM.nextInt(chars.length())));
+    private void validateOrderParams(Long userId, Long scheduleId, List<String> seatLabels, String captchaTicket) {
+        if (userId == null) throw new BusinessException("请先登录");
+        if (scheduleId == null) throw new BusinessException("场次 ID 不能为空");
+        if (seatLabels == null || seatLabels.isEmpty()) throw new BusinessException("请至少选择一个座位");
+        if (seatLabels.size() > 6) throw new BusinessException("一次最多选择 6 个座位");
+        
+        // 新增：校验验证码票据是否为空
+        if (captchaTicket == null || captchaTicket.trim().isEmpty()) {
+            throw new BusinessException("验证码已失效，请重新获取");
         }
-        return sb.toString();
     }
 }

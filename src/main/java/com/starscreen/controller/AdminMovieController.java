@@ -43,7 +43,6 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/admin/movies")
-@CrossOrigin
 @Validated // 【新增】开启方法参数级别的校验
 public class AdminMovieController {
 
@@ -60,11 +59,6 @@ public class AdminMovieController {
      * @param size 每页条数（⚠️ 无上限，建议加 @Max(100)）
      * @return Result<Page<Movie>>
      */
-//    @GetMapping
-//    public Result<Page<Movie>> list(@RequestParam(defaultValue = "0") int page,
-//                                     @RequestParam(defaultValue = "10") int size) {
-//        return Result.success(movieService.listPaged(page, size));
-//    }
     @GetMapping
     public Result<Page<Movie>> list(
             @RequestParam(defaultValue = "0") int page,

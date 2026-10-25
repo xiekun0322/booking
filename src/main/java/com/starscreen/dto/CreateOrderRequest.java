@@ -33,6 +33,7 @@ import java.util.List;
  *          由 OrderService.parseSeatLabel() 用正则 ^(\d+)排(\d+)座$ 解析，
  *          前端 seat.html 生成的格式与之一致。
  */
+
 @Data
 public class CreateOrderRequest {
 
@@ -44,9 +45,6 @@ public class CreateOrderRequest {
     @NotEmpty(message = "请至少选择一个座位")
     @Size(max = 6, message = "一次最多选择 6 个座位")
     private List<String> seats;
-
-	public String getCaptchaTicket() {
-		// TODO 自动生成的方法存根
-		return null;
-	}
+    
+    private String captchaTicket;
 }

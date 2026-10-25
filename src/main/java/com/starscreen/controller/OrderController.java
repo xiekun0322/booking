@@ -1,6 +1,7 @@
 package com.starscreen.controller;
 
 import com.starscreen.common.Result;
+import com.starscreen.common.SessionConstants;
 import com.starscreen.dto.CreateOrderRequest;
 import com.starscreen.entity.Order;
 import com.starscreen.mock.MockWechatPayServer;
@@ -53,7 +54,7 @@ public class OrderController {
      */
     @GetMapping
     public Result<List<Order>> list(HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
+        Long userId = (Long) session.getAttribute(SessionConstants.USER_ID);
         if (userId == null) return Result.error(401, "请先登录");
         return Result.success(orderService.listPagedByUser(userId, "all", 0, 1000).getContent());
     }
@@ -70,7 +71,7 @@ public class OrderController {
      */    
     @GetMapping("/{id}")
     public Result<Order> detail(@PathVariable Long id, HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
+        Long userId = (Long) session.getAttribute(SessionConstants.USER_ID);
         Order order = orderService.getById(id);
         if (order == null) return Result.error(404, "订单不存在");
         
@@ -96,10 +97,10 @@ public class OrderController {
      */
     @PostMapping
     public Result<Order> create(@RequestBody @Valid CreateOrderRequest req, HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
+        Long userId = (Long) session.getAttribute(SessionConstants.USER_ID);
         if (userId == null) return Result.error(401, "请先登录");
         
-        // 🚨 从请求体中拿到前端传来的验证码凭证
+        // 从请求体中拿到前端传来的验证码凭证
         return Result.success(orderService.createOrder(
                 userId, 
                 req.getScheduleId(), 
@@ -114,7 +115,7 @@ public class OrderController {
      */
     @PostMapping("/{id}/pay")
     public Result<String> pay(@PathVariable Long id, HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
+        Long userId = (Long) session.getAttribute(SessionConstants.USER_ID);
         if (userId == null) return Result.error(401, "请先登录");
         
         // 1. 发起统一下单
@@ -151,7 +152,7 @@ public class OrderController {
      */
     @PostMapping("/{id}/cancel")
     public Result<Order> cancel(@PathVariable Long id, HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
+        Long userId = (Long) session.getAttribute(SessionConstants.USER_ID);
         if (userId == null) return Result.error(401, "请先登录");
         return Result.success(orderService.cancel(userId, id));
     }

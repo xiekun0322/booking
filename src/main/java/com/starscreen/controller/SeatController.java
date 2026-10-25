@@ -32,7 +32,6 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/seats")
-@CrossOrigin
 public class SeatController {
 
     @Autowired

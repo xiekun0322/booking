@@ -33,8 +33,11 @@ public class MockWechatPayServer {
                 // 直接调用 Service 层，确保 @Transactional 事务生效
                 orderService.handlePayCallback(orderId);
                 
-                log.info("[模拟微信服务器] 回调已发送完毕。");
-                
+                log.info("[模拟微信服务器] 回调已发送完毕。");               
+            } catch (InterruptedException e) {
+                log.error("[模拟微信服务器] 回调发送被中断", e);
+                // 核心修复：恢复线程的中断状态
+                Thread.currentThread().interrupt(); 
             } catch (Exception e) {
                 log.error("[模拟微信服务器] 回调发送失败", e);
             }

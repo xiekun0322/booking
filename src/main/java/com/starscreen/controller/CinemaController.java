@@ -1,13 +1,19 @@
 package com.starscreen.controller;
 
+import java.util.List;
+import java.util.stream.Stream;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.starscreen.common.Result;
 import com.starscreen.entity.Cinema;
 import com.starscreen.repository.CinemaRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 【功能】影院公开 API。
@@ -36,7 +42,7 @@ public class CinemaController {
         List<Cinema> filtered = all.stream()
                 .filter(c -> brand == null || brand.isEmpty() || brand.equals(c.getBrand()))
                 .filter(c -> district == null || district.isEmpty() || district.equals(c.getDistrict()))
-                .collect(Collectors.toList());
+                .toList();
 
         return Result.success(filtered);
     }

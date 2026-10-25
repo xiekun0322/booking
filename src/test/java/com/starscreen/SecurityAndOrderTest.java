@@ -1,23 +1,28 @@
 package com.starscreen;
 
-import com.starscreen.common.BusinessException;
-import com.starscreen.controller.UserController;
-import com.starscreen.dto.LoginRequest;
-import com.starscreen.dto.SmsLoginRequest;
-import com.starscreen.service.OrderService;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpSession;
 
-import java.util.Arrays;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import com.starscreen.common.BusinessException;
+import com.starscreen.common.Result;
+import com.starscreen.controller.UserController;
+import com.starscreen.dto.LoginRequest;
+import com.starscreen.dto.SendSmsRequest;
+import com.starscreen.service.OrderService;
 
 @SpringBootTest
-public class SecurityAndOrderTest {
+class SecurityAndOrderTest {
 
     @Autowired
     private OrderService orderService;
@@ -27,7 +32,7 @@ public class SecurityAndOrderTest {
 
     // ==================== 1. 测试黄牛防刷：重复座位拦截 ====================
     @Test
-    public void testDuplicateSeatsRejected() {
+    void testDuplicateSeatsRejected() {
         Long userId = 1L;
         Long scheduleId = 1L;
         // 模拟黑客故意传入三个一样的座位
@@ -44,24 +49,27 @@ public class SecurityAndOrderTest {
 
     // ==================== 2. 测试验证码脱敏：前端拿不到验证码 ====================
     @Test
-    public void testSmsCodeNotReturned() {
-        // 注意：因为发送短信依赖第三方，这里如果没有真实环境，你可以 Mock 掉
-        // 这里主要演示，调用接口后返回的数据中，绝对不能有 6 位数字的验证码
-        // 实际上，如果你把返回值改成了 Result<Void>，这里编译直接报错，说明你改对了
+    void testSmsCodeNotReturned() {
+        // 1. 准备测试数据
+        SendSmsRequest req = new SendSmsRequest();
+        req.setPhone("13800138000");
+
+        // 2. 接收返回结果（改用 Result<Void>）
+        Result<Void> result = userController.sendSms(req);
+
+        // 3. 核心断言（极其干脆！）
+        // 断言 A：状态码必须是成功
+        assertEquals(200, result.getCode());
         
-        // 假设我们之前的 sendSms 方法
-        /*
-        Result<String> result = userController.sendSms(new SendSmsRequest("13800138000"));
-        // 以前 result.getData() 是 "123456"
-        // 现在应该为 null，或者提示语
-        assertNull(result.getData(), "安全测试失败：验证码被泄露给了前端！");
-        */
-        System.out.println("✅ 短信验证码脱敏测试：请确保返回类型修改为 Result<Void>！");
+        // 断言 B：既然改成了 Void，那 data 必须为空！
+        assertNull(result.getData(), "安全漏洞：发短信接口依然在向前端返回数据！");
+        
+        System.out.println("测试通过：验证码已安全脱敏，前端无法直接获取。");
     }
 
     // ==================== 3. 测试 Session 固定防护：登录刷新 Session ====================
     @Test
-    public void testLoginRefreshesSessionId() {
+    void testLoginRefreshesSessionId() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         // 模拟黑客预先塞入的旧 Session ID
         MockHttpSession oldSession = new MockHttpSession();

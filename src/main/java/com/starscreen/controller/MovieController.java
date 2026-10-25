@@ -33,7 +33,6 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/movies")
-@CrossOrigin
 public class MovieController {
 
     @Autowired

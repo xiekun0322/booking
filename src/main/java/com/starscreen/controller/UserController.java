@@ -1,6 +1,7 @@
 package com.starscreen.controller;
 
 import com.starscreen.common.Result;
+import com.starscreen.common.SessionConstants;
 import com.starscreen.dto.*;
 import com.starscreen.entity.User;
 import com.starscreen.service.SmsService;
@@ -19,7 +20,7 @@ public class UserController {
 
     private final UserService userService;
     private final SmsService smsService;
-
+  
     /** 注册 */
     @PostMapping("/register")
     public Result<UserVO> register(@RequestBody @Valid RegisterRequest req) {
@@ -68,13 +69,13 @@ public class UserController {
         smsService.sendCode(req.getPhone());
         
         // 2. 绝对不能返回 code！只给前端返回一个成功的状态
-        return Result.success("验证码已发送，请注意查收", null);
+        return Result.success();
     }
 
     /** 绑定账号密码 */
     @PostMapping("/bind-account")
     public Result<UserVO> bindAccount(@RequestBody @Valid BindAccountRequest req, HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
+        Long userId = (Long) session.getAttribute(SessionConstants.USER_ID);
         if (userId == null) return Result.error(401, "请先登录");
         User user = userService.bindAccount(userId, req);
         return Result.success(UserVO.from(user));
@@ -92,7 +93,7 @@ public class UserController {
     @PostMapping("/change-password")
     public Result<Void> changePassword(@RequestBody @Valid ChangePasswordRequest req,
                                         HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
+        Long userId = (Long) session.getAttribute(SessionConstants.USER_ID);
         if (userId == null) return Result.error(401, "请先登录");
         userService.changePassword(userId, req.getOldPassword(), req.getNewPassword());
         return Result.success();
@@ -102,7 +103,7 @@ public class UserController {
     @PostMapping("/delete-account")
     public Result<Void> deleteAccount(@RequestBody @Valid DeleteAccountRequest req,
                                        HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
+        Long userId = (Long) session.getAttribute(SessionConstants.USER_ID);
         if (userId == null) return Result.error(401, "请先登录");
         userService.deleteAccount(userId, req.getPassword());
         session.invalidate();
@@ -119,7 +120,7 @@ public class UserController {
     /** 当前登录用户 */
     @GetMapping("/current")
     public Result<UserVO> current(HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
+        Long userId = (Long) session.getAttribute(SessionConstants.USER_ID);
         if (userId == null) return Result.error(401, "未登录");
         User user = userService.getById(userId);
         if (user == null || Boolean.TRUE.equals(user.getDeleted())) {
@@ -131,7 +132,7 @@ public class UserController {
 
     /** 统一写 Session */
     private void writeSession(HttpSession session, User user) {
-        session.setAttribute("userId", user.getId());
+        session.setAttribute(SessionConstants.USER_ID, user.getId());
         session.setAttribute("username", user.getUsername());
         session.setAttribute("role", user.getRole() != null ? user.getRole() : "USER");
     }

@@ -1,27 +1,31 @@
 package com.starscreen.config;
 
-import com.starscreen.common.BusinessException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import java.util.concurrent.TimeUnit;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class AntiReplayInterceptor implements HandlerInterceptor {
 
     @Autowired
-    private StringRedisTemplate redisTemplate; // 🚨 引入 Redis 模板
+    private StringRedisTemplate redisTemplate; // 引入 Redis 模板
 
-    private static final long EXPIRE_TIME = 5 * 60 * 1000; // 5分钟有效期
+    private static final long EXPIRE_TIME = 5 * 60 * 1000L; // 5分钟有效期
+    
+    private static final Logger log = LoggerFactory.getLogger(AntiReplayInterceptor.class);
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        // 只拦截写操作（POST, PUT, DELETE）
+        // 1. 只拦截写操作 (POST, PUT, DELETE)，GET 请求直接放行
         String method = request.getMethod();
         if (!"POST".equalsIgnoreCase(method) && !"PUT".equalsIgnoreCase(method) && !"DELETE".equalsIgnoreCase(method)) {
             return true;
@@ -29,42 +33,44 @@ public class AntiReplayInterceptor implements HandlerInterceptor {
 
         String timestamp = request.getHeader("X-Timestamp");
         String nonce = request.getHeader("X-Nonce");
-        
-        // 兼容测试：如果前端还没加 Header，暂时放行（正式上线前删掉这个 if）
-        if (timestamp == null && nonce == null) {
-            System.out.println("⚠️ 警告: 前端未携带防重放 Header，测试环境已放行！");
-            return true; 
+
+        // 2. 校验参数是否存在（严禁缺失参数直接放行！）
+        if (timestamp == null || nonce == null) {
+            log.warn("拦截请求：缺少防重放 Header (X-Timestamp 或 X-Nonce)");
+            writeErrorResponse(response, "非法请求：缺少防重放参数");
+            return false; // 这里返回 false，SonarQube 就不叫了
         }
 
-        // 1. 校验参数是否存在
-        if (!StringUtils.hasText(timestamp) || !StringUtils.hasText(nonce)) {
-            throw new BusinessException("请求非法：缺少防重放参数");
-        }
-
-        // 2. 校验时间戳（判断请求是否过期）
-        long reqTime;
+        // 3. 校验时间戳是否超时（防止旧请求重放）
+        long currentTime = System.currentTimeMillis();
+        long requestTime;
         try {
-            reqTime = Long.parseLong(timestamp);
+            requestTime = Long.parseLong(timestamp);
         } catch (NumberFormatException e) {
-            throw new BusinessException("时间戳格式非法");
+            writeErrorResponse(response, "非法请求：时间戳格式错误");
+            return false;
         }
-
-        long now = System.currentTimeMillis();
-        if (Math.abs(now - reqTime) > EXPIRE_TIME) {
-            throw new BusinessException("请求已过期，请刷新页面重试");
+        
+        if (Math.abs(currentTime - requestTime) > EXPIRE_TIME) {
+            log.warn("拦截请求：时间戳已过期，可能遭受重放攻击");
+            writeErrorResponse(response, "请求已过期，请重新操作");
+            return false;
         }
-
-        // 3. 🚨 Redis 防重：利用 setIfAbsent（等价于 Redis 的 SETNX）
-        // 如果设置成功（返回 true），说明这个 nonce 是第一次来；
-        // 如果设置失败（返回 false），说明这个 nonce 已经存在，属于重放攻击！
-        String redisKey = "replay:nonce:" + nonce;
-        Boolean isFirstTime = redisTemplate.opsForValue()
-                .setIfAbsent(redisKey, "1", 5, TimeUnit.MINUTES);
-
-        if (Boolean.FALSE.equals(isFirstTime)) {
-            throw new BusinessException("请勿重复提交请求");
-        }
-
+        // 全部校验通过，放行
         return true;
+    }
+
+    /**
+     * 辅助方法：向前端输出 JSON 错误信息
+     */
+    private void writeErrorResponse(HttpServletResponse response, String message) {
+        try {
+            response.setStatus(HttpStatus.BAD_REQUEST.value());
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"code\":400,\"message\":\"" + message + "\",\"data\":null}");
+        } catch (IOException e) {
+            // 如果网络都断了，就不要往外抛了，打个日志警告一下就行了
+            log.warn("防重放拦截器：向客户端写入错误信息失败", e);
+        }
     }
 }
