@@ -63,10 +63,4 @@ public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
      *          → 后台场次管理页的"全部电影"筛选项
      */
     Page<Schedule> findAllByOrderByIdDesc(Pageable pageable);
-
-    /**
-     * 【优化】直接在数据库层过滤：查询该电影今天及以后的场次
-     * JPA 的 GreaterThanEqual 会自动翻译成 SQL 的 >=
-     */
-    List<Schedule> findByMovieIdAndDateGreaterThanEqual(Long movieId, String date);
 }

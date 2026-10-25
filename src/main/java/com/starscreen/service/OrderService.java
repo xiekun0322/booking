@@ -1,27 +1,6 @@
 package com.starscreen.service;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.starscreen.common.BusinessException;
-import com.starscreen.config.RabbitMQConfig;
 import com.starscreen.entity.Movie;
 import com.starscreen.entity.Order;
 import com.starscreen.entity.Schedule;
@@ -30,9 +9,24 @@ import com.starscreen.repository.MovieRepository;
 import com.starscreen.repository.OrderRepository;
 import com.starscreen.repository.ScheduleRepository;
 import com.starscreen.repository.SeatRepository;
-import com.starscreen.util.SnowflakeIdWorker;
-
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 【功能】订单业务服务 —— 系统核心。
@@ -72,9 +66,11 @@ public class OrderService {
     /** 支付超时时间（分钟）—— 超时后订单自动取消，座位释放 */
     private static final int PAY_TIMEOUT_MINUTES = 10;
 
+    /** 时间格式，与 Order 实体里的字符串字段保持一致 */
+    private static final DateTimeFormatter DTF = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     /** 座位标签正则：必须匹配 "3排5座" 格式 */
-    // 限制排号和座号最多两位数，即最多 99 排 99 座（符合真实影院情况）
-    private static final Pattern SEAT_LABEL = Pattern.compile("^(\\d{1,2})排(\\d{1,2})座$");
+    private static final Pattern SEAT_LABEL = Pattern.compile("^(\\d+)排(\\d+)座$");
 
     /** 单笔订单最多座位数（与 CreateOrderRequest 的 @Size(max=6) 呼应） */
     private static final int MAX_SEATS_PER_ORDER = 6;
@@ -86,13 +82,7 @@ public class OrderService {
     private final SeatRepository seatRepository;
     private final ScheduleRepository scheduleRepository;
     private final MovieRepository movieRepository;
-    /** RabbitTemplate 用于发送延迟消息，触发超时订单取消 */
-    private final RabbitTemplate rabbitTemplate;
-    
-    private static final SnowflakeIdWorker snowflake = new SnowflakeIdWorker(1); // 机器id：1
-    
-    private final SmsService smsService; // 加上这行，因为类上面有 @RequiredArgsConstructor，它会自动注入
-    
+
     // ==================== 1. 下单锁座 ====================
 
     /**
@@ -131,33 +121,13 @@ public class OrderService {
      *   - "座位格式错误：xxx" 标签不符合 ^\d+排\d+座$
      */
     @Transactional
-    public Order createOrder(Long userId, Long scheduleId, List<String> seatLabels, String captchaTicket) {
+    public Order createOrder(Long userId, Long scheduleId, List<String> seatLabels) {
         // -------- 步骤 1：参数校验 --------
         if (userId == null) throw new BusinessException("请先登录");
         if (scheduleId == null) throw new BusinessException("场次 ID 不能为空");
         if (seatLabels == null || seatLabels.isEmpty()) throw new BusinessException("请至少选择一个座位");
         if (seatLabels.size() > MAX_SEATS_PER_ORDER)
             throw new BusinessException("一次最多选择 " + MAX_SEATS_PER_ORDER + " 个座位");
-        
-        // 新增防御 C：座位去重校验
-        // 利用 Set 的特性，如果有重复，Set 的大小会小于 List 的大小
-        // 新增防御 C：座位去重校验（包含空格处理）
-        long distinctCount = seatLabels.stream().map(String::trim).distinct().count();
-        if (distinctCount != seatLabels.size()) {
-            throw new BusinessException("座位数据异常：请勿重复提交相同座位");
-        }
-
-        // 新增防御 A：人机验证（滑块）
-        // 假设你注入了一个验证码服务 smsService 或专门的 CaptchaService
-        if (captchaTicket == null || !smsService.verifyCaptcha(captchaTicket)) {
-            throw new BusinessException("人机验证失败，请重新滑动验证码");
-        }
-
-        // 新增防御 B：限制单用户未支付订单数（防黄牛占座）
-        long pendingCount = orderRepository.countByUserIdAndStatus(userId, "pending");
-        if (pendingCount >= 2) { // 阈值设为2，视具体业务调整
-            throw new BusinessException("您有未支付的订单，请先支付或取消后再购票");
-        }
 
         // -------- 步骤 2：查场次 --------
         Schedule schedule = scheduleRepository.findById(scheduleId)
@@ -186,23 +156,11 @@ public class OrderService {
         order.setMovieTitle(movie != null ? movie.getTitle() : "未知电影");
         order.setCinemaName(schedule.getCinemaName());
         order.setHallName(schedule.getHallName());
+        order.setShowTime(schedule.getDate() + " " + schedule.getStartTime());
         order.setSeats(String.join(",", seatLabels));
-        // 1. 取出单价，把 Double 转成 BigDecimal（如果 schedule.getPrice() 已经是 BigDecimal，这行可以不写，直接赋值）
-        // 1. 取出单价，如果为空默认 35.0
-        Double priceObj = schedule.getPrice() != null ? schedule.getPrice() : 35.0;
-        BigDecimal unitPrice = BigDecimal.valueOf(priceObj);
-        // 2. 把座位数量转成 BigDecimal
-        BigDecimal seatCount = new BigDecimal(seatLabels.size());
-        // 3. 相乘，并保留两位小数，四舍五入
-        BigDecimal totalPrice = unitPrice.multiply(seatCount).setScale(2, RoundingMode.HALF_UP);
-        // 4. 赋值给订单
-        order.setTotalPrice(totalPrice);
+        order.setTotalPrice(schedule.getPrice() * seatLabels.size());
         order.setStatus("pending");
-     	// 【修改后】
-        order.setCreateTime(LocalDateTime.now());
-        // 拼装 LocalDateTime：假设 schedule 的 date 是 "2026-10-25"，startTime 是 "14:30"
-        String dateTimeStr = schedule.getDate() + " " + schedule.getStartTime();
-        order.setShowTime(LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+        order.setCreateTime(LocalDateTime.now().format(DTF));
 
         // -------- 步骤 5：保存订单 --------
         order = orderRepository.save(order);
@@ -217,84 +175,70 @@ public class OrderService {
             }
         }
 
-        // 锁座成功后，发送延迟消息！
-        // 假设你在配置类里定义了一个延迟队列叫 "order.delay.queue"
-        // 延迟时间设置为 10 分钟 (600000 毫秒)
-        // 【修复】发送到普通交换机，队列里我们已经配置了 10 分钟 TTL，时间一到自动变死信
-        rabbitTemplate.convertAndSend(
-                com.starscreen.config.RabbitMQConfig.ORDER_EXCHANGE,
-                com.starscreen.config.RabbitMQConfig.ORDER_ROUTING_KEY,
-                order.getId()
-        );
-        
-        // 【新增】发送延迟消息。消息内容就是订单ID
-        rabbitTemplate.convertAndSend(
-                RabbitMQConfig.ORDER_EXCHANGE,
-                RabbitMQConfig.ORDER_ROUTING_KEY,
-                order.getId() // 把订单ID传过去
-        );
-        log.info("已发送订单延迟检查消息，orderId={}", order.getId());
-
+        log.info("创建订单成功：orderNo={}, userId={}, scheduleId={}, seats={}, totalPrice={}",
+                order.getOrderNo(), userId, scheduleId, seatLabels, order.getTotalPrice());
         return order;
-        
     }
 
     // ==================== 2. 支付 ====================
 
     /**
-     * 发起支付（预下单）
+     * 【功能】支付订单，生成取票码，座位由 locked 改 sold。
+     * 【调用链】
+     *   OrderController.pay(id, HttpSession)
+     *   → POST /api/orders/{id}/pay
+     *   → OrderService.pay(userId, orderId)
+     *   → orderRepository.findById / save
+     *   → seatRepository.findByOrderId / saveAll
+     *
+     * 【业务规则】
+     *   - 只有 pending 状态可支付
+     *   - 只有订单所属用户可支付（越权检查）
+     *   - 重复支付抛异常
+     *
+     * 【异常】
+     *   - "订单不存在"
+     *   - "无权操作该订单"      userId 与 order.userId 不匹配
+     *   - "订单已支付，请勿重复操作"
+     *   - "订单状态不允许支付：cancelled"
+     *
+     * 【取票码格式】8 位字符，中间有横线：ABCD-1234
+     *              字符集排除了易混淆的 I/O/0/1。
      */
     @Transactional
-    public String createPayTransaction(Long userId, Long orderId) {
+    public Order pay(Long userId, Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException("订单不存在"));
 
-        if (!userId.equals(order.getUserId())) {
+        // -------- 越权检查 --------
+        if (userId != null && !userId.equals(order.getUserId())) {
             throw new BusinessException("无权操作该订单");
         }
+
+        // -------- 状态检查 --------
+        if ("paid".equals(order.getStatus())) {
+            log.warn("重复支付被拒绝：orderId={}", orderId);
+            throw new BusinessException("订单已支付，请勿重复操作");
+        }
         if (!"pending".equals(order.getStatus())) {
+            log.warn("非法状态支付被拒绝：orderId={}, status={}", orderId, order.getStatus());
             throw new BusinessException("订单状态不允许支付：" + order.getStatus());
         }
 
-        String mockTradeNo = "WX_" + System.currentTimeMillis();
-        log.info("向第三方支付网关发起统一下单，订单号：{}，流水号：{}", order.getOrderNo(), mockTradeNo);
-        
-        return "http://mock-pay.com?tradeNo=" + mockTradeNo;
-    }
-
-    /**
-     * 支付回调（由第三方服务器调用）
-     */
-    @Transactional
-    public void handlePayCallback(Long orderId) {
-        // 【新增这一行】防止传入的 orderId 为 null，同时消除红波浪线
-        if (orderId == null) {
-            throw new BusinessException("订单ID不能为空");
-        }
-
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new BusinessException("订单不存在"));
-
-        LocalDateTime now = LocalDateTime.now();
-        
-        // 核心：原子更新
-        // 只传两个参数：订单ID和当前时间
-        int affected = orderRepository.updateToPaid(orderId, now);
-
-        if (affected == 0) {
-            log.warn("【支付回调】处理失败，订单已被处理过或已取消，orderId={}", orderId);
-            return;
-        }
-
-        order.setPayTime(now);
+        // -------- 更新订单 --------
+        order.setStatus("paid");
+        order.setPayTime(LocalDateTime.now().format(DTF));
         order.setTicketCode(generateTicketCode());
         orderRepository.save(order);
 
-        // 一条 SQL 批量更新座位状态，直接干掉循环
-        int seatCount = seatRepository.updateToSoldByOrderId(orderId);
-        log.info("【支付回调】订单 {} 关联的 {} 个座位已批量更新为 sold", orderId, seatCount);
+        // -------- 座位 locked → sold --------
+        List<Seat> seats = seatRepository.findByOrderId(order.getId());
+        for (Seat seat : seats) seat.setStatus("sold");
+        seatRepository.saveAll(seats);
 
-        log.info("【支付回调】订单支付成功，已生成取票码：{}", order.getTicketCode());
+        log.info("订单支付成功：orderId={}, orderNo={}, ticketCode={}, totalPrice={}",
+                orderId, order.getOrderNo(), order.getTicketCode(), order.getTotalPrice());
+        return order;
     }
 
     // ==================== 3. 取消订单 ====================
@@ -323,8 +267,7 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException("订单不存在"));
 
-        // 只要 userId 是 null，或者 userId 跟订单里的不对，统统赶走！
-        if (userId == null || !userId.equals(order.getUserId())) {
+        if (userId != null && !userId.equals(order.getUserId())) {
             throw new BusinessException("无权操作该订单");
         }
 
@@ -355,9 +298,39 @@ public class OrderService {
      *
      * 【异常处理】
      *   单个订单时间格式异常会跳过，不影响其它订单处理。
-     *   
-     *   详情见：service/OrderTimeoutConsumer.java，使用 MQ 延迟队列处理超时订单，避免定时任务扫描压力。
      */
+    @Scheduled(fixedRate = 30_000)
+    @Transactional
+    public void cancelExpiredOrders() {
+        List<Order> pendingOrders = orderRepository.findByStatus("pending");
+        if (pendingOrders.isEmpty()) return;
+
+        LocalDateTime now = LocalDateTime.now();
+        int cancelledCount = 0;
+
+        for (Order order : pendingOrders) {
+            if (order.getCreateTime() == null) continue;
+
+            // -------- 解析下单时间（容错）--------
+            LocalDateTime created;
+            try {
+                created = LocalDateTime.parse(order.getCreateTime(), DTF);
+            } catch (Exception e) {
+                log.warn("订单时间格式异常，跳过：orderId={}", order.getId());
+                continue;
+            }
+
+            // -------- 超时判断 --------
+            if (created.plusMinutes(PAY_TIMEOUT_MINUTES).isBefore(now)) {
+                order.setStatus("cancelled");
+                orderRepository.save(order);
+                releaseSeats(order.getId());
+                cancelledCount++;
+                log.info("超时取消订单：orderId={}, orderNo={}", order.getId(), order.getOrderNo());
+            }
+        }
+        if (cancelledCount > 0) log.info("本轮共自动取消超时订单 {} 个", cancelledCount);
+    }
 
     // ==================== 5. 查询 ====================
 
@@ -389,7 +362,7 @@ public class OrderService {
         }
         return orderRepository.findByStatusOrderByIdDesc(status, pageable);
     }
-    
+
     /**
      * 【功能】按 ID 查订单。
      * 【调用链】
@@ -404,15 +377,18 @@ public class OrderService {
     // ==================== 私有方法 ====================
 
     /**
-     * 【功能】释放订单占用的座位（locked → available）
+     * 【功能】释放订单占用的座位（locked → available）。
      * 【调用链】
      *   cancel() / cancelExpiredOrders() → releaseSeats(orderId)
      * 【副作用】同时清空 seat.orderId，方便下次被新订单占用。
      */
     private void releaseSeats(Long orderId) {
-        // 一条 SQL 批量释放
-        int count = seatRepository.releaseSeatsByOrderId(orderId);
-        log.info("释放座位成功，订单 {} 共释放 {} 个座位", orderId, count);
+        List<Seat> seats = seatRepository.findByOrderId(orderId);
+        for (Seat seat : seats) {
+            seat.setStatus("available");
+            seat.setOrderId(null);
+        }
+        seatRepository.saveAll(seats);
     }
 
     /**
@@ -422,17 +398,8 @@ public class OrderService {
      */
     private int[] parseSeatLabel(String label) {
         Matcher m = SEAT_LABEL.matcher(label == null ? "" : label.trim());
-        if (!m.matches()) {
-            throw new BusinessException("座位格式错误：" + label);
-        }
-        
-        try {
-            // 虽然加了限制，但为了绝对的健壮性，加上 try-catch 防止未知的溢出
-            return new int[]{Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2))};
-        } catch (NumberFormatException e) {
-            // 即使正则被绕过，也会被这里拦住，返回友好的业务提示，而不是系统报错
-            throw new BusinessException("座位数字越界：" + label);
-        }
+        if (!m.matches()) throw new BusinessException("座位格式错误：" + label);
+        return new int[]{Integer.parseInt(m.group(1)), Integer.parseInt(m.group(2))};
     }
 
     /**
@@ -441,12 +408,9 @@ public class OrderService {
      * 【⚠️ 碰撞风险】同一毫秒内多次调用可能重复。
      *                生产环境建议用 UUID、雪花 ID 或数据库序列。
      */
-    /**
-     * 生成订单号（改用雪花算法防碰撞）
-     */
     private String generateOrderNo() {
-        // 雪花算法生成 Long 类型唯一 ID，转成字符串，前面加个 MO 前缀
-        return "MO" + snowflake.nextId();
+        return "MO" + System.currentTimeMillis()
+                + String.format("%03d", RANDOM.nextInt(1000));
     }
 
     /**
