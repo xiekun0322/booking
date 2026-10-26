@@ -9,6 +9,13 @@
     a { text-decoration: none; color: inherit; }
     ul, li { list-style: none; }
 
+    /* 视觉隐藏标签，用于解决 SonarQube 的无障碍标签警告 */
+    .sr-only {
+        position: absolute; width: 1px; height: 1px; padding: 0;
+        margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0);
+        white-space: nowrap; border-width: 0;
+    }
+
     /* 顶部导航 */
     .top-nav { height: 80px; border-bottom: 1px solid #e5e5e5; display: flex;
                align-items: center; padding: 0 15%; position: sticky; top: 0;
@@ -141,6 +148,8 @@
 
     <!-- 搜索 -->
     <div class="search-bar">
+        <!-- 【修复】补充视觉隐藏的 label -->
+        <label for="searchInput" class="sr-only">搜索订单</label>
         <input type="text" id="searchInput" placeholder="搜索订单号 / 电影名 / 用户名">
         <button id="searchBtn">搜索</button>
     </div>
@@ -176,7 +185,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // ==================== 假数据：50 条订单 ====================
     const MOVIES = ['八仙！', '空枪', '欢迎来龙餐馆', '奥德赛', '复仇者联盟4：终局之战', '鸳鸯楼底', '痴迷', '蜘蛛侠：崭新之日'];
     const CINEMAS = ['厦门华侨大学店', '厦门万象城店', '厦门万达影城（集美店）', '厦门金逸影城（SM店）'];
-    const STATUSES = ['pending', 'paid', 'cancelled'];
 
     const MOCK_ORDERS = [];
     for (let i = 1; i <= 50; i++) {
@@ -281,7 +289,8 @@ document.addEventListener('DOMContentLoaded', function () {
         // 事件绑定
         tbody.querySelectorAll('.op-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                const id = parseInt(btn.dataset.id, 10);
+                // 【修复】全局 parseInt 改为 Number.parseInt
+                const id = Number.parseInt(btn.dataset.id, 10);
                 if (btn.dataset.action === 'view') {
                     alert('订单详情（待开发）：ID=' + id);
                 } else if (btn.dataset.action === 'cancel') {
@@ -319,7 +328,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         pag.querySelectorAll('button[data-page]').forEach(btn => {
             btn.addEventListener('click', () => {
-                const p = parseInt(btn.dataset.page, 10);
+                // 【修复】全局 parseInt 改为 Number.parseInt
+                const p = Number.parseInt(btn.dataset.page, 10);
                 if (p < 1 || p > totalPages) return;
                 state.page = p;
                 render();

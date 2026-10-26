@@ -11,7 +11,6 @@
     a { text-decoration: none; color: inherit; }
     ul, li { list-style: none; }
 
-    /* 顶部导航 */
     .top-nav { height: 80px; border-bottom: 1px solid #e5e5e5; display: flex;
                align-items: center; padding: 0 15%; position: sticky; top: 0;
                background: #fff; z-index: 100; }
@@ -37,7 +36,6 @@
     .dropdown-menu a { display: block; padding: 10px 20px; font-size: 14px; color: #333; }
     .dropdown-menu a:hover { background: #f5f5f5; color: #1e3a8a; }
 
-    /* 电影头部 */
     .movie-header { background: linear-gradient(to right, #0f172a, #1e3a8a);
                     color: #fff; padding: 40px 0; }
     .movie-header-content { width: 1200px; margin: 0 auto; display: flex; align-items: flex-start; }
@@ -62,7 +60,6 @@
     .box-office-label { font-size: 13px; color: #ccc; margin-bottom: 5px; }
     .box-office-value { font-size: 24px; color: #fff; font-weight: bold; }
 
-    /* 筛选栏 */
     .filter-section { width: 1200px; margin: 0 auto; padding: 20px 0;
                       border-bottom: 1px solid #e5e5e5; }
     .filter-row { display: flex; align-items: flex-start; margin-bottom: 12px; }
@@ -75,7 +72,6 @@
     .filter-option:hover { background: #f0f0f0; }
     .filter-option.active:hover { background: #1e3a8a; }
 
-    /* 场次列表 */
     .cinema-list-section { width: 1200px; margin: 0 auto; padding: 20px 0 60px; }
     .cinema-item { border-bottom: 1px dashed #e5e5e5; padding: 20px 0; }
     .cinema-item:last-child { border-bottom: none; }
@@ -137,7 +133,6 @@
     </div>
 </header>
 
-<!-- 电影头部 -->
 <div class="movie-header">
     <div class="movie-header-content">
         <div class="movie-poster">
@@ -171,14 +166,14 @@
     </div>
 </div>
 
-<!-- 筛选栏 -->
 <div class="filter-section">
     <div class="filter-row">
         <div class="filter-label">日期:</div>
-        <div class="filter-options">
-            <div class="filter-option active" data-filter="date">今天 10月6</div>
-            <div class="filter-option" data-filter="date">明天 10月7</div>
-            <div class="filter-option" data-filter="date">后天 10月8</div>
+        <div class="filter-options" id="dateFilter">
+            <!-- 【修复】日期内容由 JS 动态生成，不再硬编码 -->
+            <div class="filter-option active" data-filter="date"></div>
+            <div class="filter-option" data-filter="date"></div>
+            <div class="filter-option" data-filter="date"></div>
         </div>
     </div>
     <div class="filter-row">
@@ -193,7 +188,6 @@
     </div>
 </div>
 
-<!-- 场次列表 -->
 <div class="cinema-list-section">
     <div class="no-schedule" th:if="${schedules == null or schedules.isEmpty()}">
         <h2>暂无场次信息</h2>
@@ -233,7 +227,23 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // 筛选器（仅样式切换）
+
+    // ==================== 【修复】动态生成日期标签 ====================
+    // 原来是硬编码「今天 10月6 / 明天 10月7 / 后天 10月8」，
+    // 无论真实日期是几号，显示都相同，用户会以为日期卡住了。
+    (function buildDateFilter() {
+        const labels = ['今天', '明天', '后天'];
+        const nodes = document.querySelectorAll('#dateFilter .filter-option');
+        const today = new Date();
+        nodes.forEach((el, i) => {
+            const d = new Date(today);
+            d.setDate(today.getDate() + i);
+            el.textContent = labels[i] + ' ' + (d.getMonth() + 1) + '月' + d.getDate();
+            el.dataset.date = d.toISOString().slice(0, 10);
+        });
+    })();
+
+    // ==================== 筛选器（仅样式切换） ====================
     document.querySelectorAll('.filter-option').forEach(function (option) {
         option.addEventListener('click', function () {
             var group = this.dataset.filter;

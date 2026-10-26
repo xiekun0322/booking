@@ -11,6 +11,13 @@
            min-height: 100vh; display: flex; justify-content: center;
            align-items: center; color: #333; }
 
+    /* 视觉隐藏标签，用于解决 SonarQube 的无障碍标签警告，不影响 UI */
+    .sr-only {
+        position: absolute; width: 1px; height: 1px; padding: 0;
+        margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0);
+        white-space: nowrap; border-width: 0;
+    }
+
     .login-box { background: #fff; border-radius: 12px; padding: 40px 44px;
                  width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
     .login-title { font-size: 26px; font-weight: bold; color: #1e3a8a;
@@ -82,11 +89,14 @@
         <div class="row">
             <div class="input-group">
                 <div class="prefix">+86</div>
+                <!-- 【修复】补充视觉隐藏的 label -->
+                <label for="smsPhone" class="sr-only">手机号</label>
                 <input type="tel" id="smsPhone" placeholder="请输入手机号" maxlength="11">
             </div>
         </div>
         <div class="row">
             <div class="input-group">
+                <label for="smsCode" class="sr-only">短信验证码</label>
                 <input type="text" id="smsCode" placeholder="请输入短信验证码" maxlength="6">
                 <button type="button" id="sendCodeBtn">发送验证码</button>
             </div>
@@ -97,9 +107,11 @@
     <!-- 账号密码 -->
     <div class="panel" id="panelPwd">
         <div class="row">
+            <label for="pwdUsername" class="sr-only">用户名</label>
             <input type="text" id="pwdUsername" placeholder="请输入用户名" autocomplete="username">
         </div>
         <div class="row">
+            <label for="pwdPassword" class="sr-only">密码</label>
             <input type="password" id="pwdPassword" placeholder="请输入密码" autocomplete="current-password">
         </div>
         <button class="btn" id="pwdLoginBtn" disabled>登录</button>

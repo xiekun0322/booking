@@ -11,6 +11,13 @@
     a { text-decoration: none; color: inherit; }
     ul, li { list-style: none; }
 
+    /* 视觉隐藏标签，解决无障碍无标签警告 */
+    .sr-only {
+        position: absolute; width: 1px; height: 1px; padding: 0;
+        margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0);
+        white-space: nowrap; border-width: 0;
+    }
+
     /* 顶部导航 */
     .top-nav { height: 80px; border-bottom: 1px solid #e5e5e5; display: flex;
                align-items: center; padding: 0 15%; position: sticky; top: 0;
@@ -183,7 +190,9 @@
 </header>
 
 <form class="search-bar" method="get" th:action="@{/movies}">
-    <input type="text" name="keyword" placeholder="搜索电影名…"
+    <!-- 【修复】补充视觉隐藏的 label -->
+    <label for="searchKeyword" class="sr-only">搜索电影</label>
+    <input type="text" id="searchKeyword" name="keyword" placeholder="搜索电影名…"
            th:value="${keyword}">
     <button type="submit">搜索</button>
 </form>

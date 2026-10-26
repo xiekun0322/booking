@@ -105,7 +105,6 @@
     <a th:href="@{/}" class="logo">
         <div class="logo-icon">星</div>
         <div class="logo-text">星幕影票</div>
-        <link rel="stylesheet" href="/css/login-modal.css">
     </a>
     <ul class="main-menu">
         <li><a th:href="@{/}">首页</a></li>
@@ -209,11 +208,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ==================== 加载数据 ====================
     function loadCinemas() {
-        // 显示加载中
         document.getElementById('cinemaList').innerHTML =
             '<div class="empty">加载中...</div>';
 
-        // 组装 query string
         let url = '/api/cinemas';
         const params = [];
         if (filterState.brand) params.push('brand=' + encodeURIComponent(filterState.brand));
@@ -234,20 +231,16 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
-    // ==================== 前端筛选（hall/serve 在前端做）====================
+    // ==================== 前端筛选 ====================
     function getFiltered() {
         return allCinemas.filter(c => {
-            // brand / district 已在后端过滤，但前端再保险一遍
             if (filterState.brand && c.brand !== filterState.brand) return false;
             if (filterState.district && c.district !== filterState.district) return false;
 
-            // hall 在 tags 里找（简化：cinema.tags 包含 hall 类型）
             if (filterState.hall) {
                 const tags = (c.tags || '') + ',' + (c.name || '');
                 if (!tags.includes(filterState.hall)) return false;
             }
-
-            // serve 在 tags 里找
             if (filterState.serve && !(c.tags || '').includes(filterState.serve)) return false;
 
             return true;
@@ -275,7 +268,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         listEl.innerHTML = pageList.map(c => {
             const tags = (c.tags || '').split(',').filter(t => t);
-            // 起价：先固定用 35，未来可从 schedule 表算 min(price)
             const price = c.price || 35.0;
 
             return `
@@ -324,7 +316,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         pag.querySelectorAll('button[data-page]').forEach(btn => {
             btn.addEventListener('click', () => {
-                const p = parseInt(btn.dataset.page, 10);
+                // 【修复】将 parseInt 改为 Number.parseInt
+                const p = Number.parseInt(btn.dataset.page, 10);
                 if (p < 1 || p > totalPages) return;
                 filterState.page = p;
                 render();
@@ -340,7 +333,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }[c]));
     }
 
-    // ==================== 启动 ====================
     loadCinemas();
 });
 </script>

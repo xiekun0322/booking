@@ -1,26 +1,8 @@
-﻿<!--
-  【模板】seat.html —— 选座页
-  【路由】GET /seat/{scheduleId}
-  【渲染方】PageController.seat(scheduleId, model) → return "seat"
-
-  【Thymeleaf 变量】
-    - schedule  Schedule   当前场次（影院、影厅、时间、价格）
-    - movie     Movie      所属电影（海报、标题、时长）
-
-  【登录流程】
-    1. 游客进页面 → 正常渲染座位图
-    2. 游客点座位 → 正常选择
-    3. 游客点「确认选座」→ apiFetch 发 POST /api/orders
-       → 401 → auth.js 弹全局登录模态框
-       → 登录成功 → 自动重试
-       → 下单成功 → 跳 /order/{id}
--->
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>选座 - 星幕影票</title>
-    <!-- ★ 全局登录脚本（必须在 <style> 之前） -->
     <link rel="stylesheet" href="/css/login-modal.css">
     <script src="/js/auth.js" defer></script>
     <style>
@@ -29,7 +11,6 @@
     a { text-decoration: none; color: inherit; }
     ul, li { list-style: none; }
 
-    /* ===== 顶部导航 ===== */
     .top-nav { height: 80px; border-bottom: 1px solid #e5e5e5; display: flex;
                align-items: center; padding: 0 15%; position: sticky; top: 0;
                background: #fff; z-index: 100; }
@@ -56,7 +37,7 @@
     .dropdown-menu a { display: block; padding: 10px 20px; font-size: 14px; color: #333; }
     .dropdown-menu a:hover { background: #f5f5f5; color: #1e3a8a; }
 
-    /* ===== 步骤条 ===== */
+    /* 步骤条 */
     .step-bar { width: 1200px; margin: 30px auto 20px; display: flex;
                 justify-content: center; align-items: center; position: relative; }
     .step { display: flex; align-items: center; flex-direction: column;
@@ -73,10 +54,9 @@
                  margin: 0 -100px; margin-top: -18px; position: relative; z-index: 1; }
     .step-line.active { background: #1e3a8a; }
 
-    /* ===== 主容器 ===== */
     .container { width: 1200px; margin: 0 auto; display: flex; gap: 30px; padding-bottom: 60px; }
 
-    /* ===== 左侧座位图 ===== */
+    /* 左侧座位图 */
     .seat-area { flex: 1; border: 1px solid #e5e5e5; border-radius: 4px;
                  padding: 30px 20px; background: #f8f8f8;
                  display: flex; flex-direction: column; align-items: center; }
@@ -109,7 +89,7 @@
                      box-shadow: inset 0 -4px 0 rgba(0,0,0,0.1); }
     .seat.couple { border-style: dashed; border-color: #1e3a8a; }
 
-    /* ===== 右侧信息面板 ===== */
+    /* 右侧信息面板 */
     .info-area { width: 320px; flex-shrink: 0; border-left: 1px solid #e5e5e5; padding-left: 30px; }
     .movie-info { display: flex; gap: 15px; margin-bottom: 20px;
                   padding-bottom: 20px; border-bottom: 1px dashed #e5e5e5; }
@@ -159,7 +139,6 @@
 </head>
 <body>
 
-<!-- ===== 顶部导航 ===== -->
 <header class="top-nav">
     <a th:href="@{/}" class="logo">
         <div class="logo-icon">星</div>
@@ -172,12 +151,10 @@
         <li><a href="#">演出</a></li>
     </ul>
     <div class="nav-right">
-        <!-- ★ 由 auth.js 动态渲染 -->
         <div class="user-area"></div>
     </div>
 </header>
 
-<!-- ===== 步骤条 ===== -->
 <div class="step-bar">
     <div class="step active"><div class="step-circle">1</div><div class="step-text">选择影片场次</div></div>
     <div class="step-line active"></div>
@@ -189,7 +166,6 @@
 </div>
 
 <div class="container">
-    <!-- ===== 左侧：座位图 ===== -->
     <div class="seat-area">
         <div class="legend">
             <div class="legend-item"><div class="legend-icon available"></div>可选座位</div>
@@ -200,15 +176,12 @@
         <div class="screen"></div>
         <div class="screen-text">银幕中央</div>
 
-        <!-- ★ 座位容器 -->
         <div class="seat-map" id="seatMap"
              th:attr="data-schedule-id=${schedule != null ? schedule.id : 0},
                       data-price=${schedule != null ? schedule.price : 0}">
-            <!-- 由 JS 动态渲染 -->
         </div>
     </div>
 
-    <!-- ===== 右侧：信息面板 ===== -->
     <div class="info-area">
         <div class="movie-info">
             <div class="movie-poster"
@@ -239,14 +212,14 @@
         <div class="total-price">总价：<span class="price" id="totalPrice">0</span></div>
 
         <div class="phone-info">
-    		<span th:if="${session.userId == null}">
-        		<a href="javascript:void(0)" onclick="openLoginModal()"
-           		style="color:#1e3a8a;">请先登录</a>
-    		</span>
-    		<span th:if="${session.userId != null}">
-        		已登录：<span th:text="${session.username}">用户</span>
-    		</span>
-		</div>
+            <span th:if="${session.userId == null}">
+                <a href="javascript:void(0)" onclick="openLoginModal()"
+                   style="color:#1e3a8a;">请先登录</a>
+            </span>
+            <span th:if="${session.userId != null}">
+                已登录：<span th:text="${session.username}">用户</span>
+            </span>
+        </div>
 
         <button class="confirm-btn" id="confirmBtn" disabled>确认选座</button>
     </div>
@@ -255,27 +228,22 @@
 <footer class="footer"><!-- ... --></footer>
 <div class="floating-ad"><!-- ... --></div>
 
-<!-- ★ 全局登录模态框 -->
 <div th:replace="~{fragments/login-modal :: modal}"></div>
-<!-- ★ 绑定账号模态框 -->
 <div th:replace="~{fragments/login-modal :: bindModal}"></div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // ===== DOM 引用 =====
     const seatMap = document.getElementById('seatMap');
     const totalPriceEl = document.getElementById('totalPrice');
     const confirmBtn = document.getElementById('confirmBtn');
     const selectedSeatsContainer = document.getElementById('selectedSeatsContainer');
 
-    // ===== 从 data-* 属性读取后端注入的值 =====
     const scheduleId = seatMap.dataset.scheduleId;
-    const price = parseFloat(seatMap.dataset.price) || 0;
+    // 【修复】全局 parseFloat 改为 Number.parseFloat
+    const price = Number.parseFloat(seatMap.dataset.price) || 0;
 
-    // ===== 本地状态 =====
     let selectedSeats = [];
 
-    // ===== 1. 加载座位 =====
     function loadSeats() {
         fetch('/api/seats/schedule/' + scheduleId)
             .then(res => res.json())
@@ -293,7 +261,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
-    // ===== 2. 渲染座位 =====
     function renderSeats(seats) {
         seatMap.innerHTML = '';
         selectedSeats = [];
@@ -333,7 +300,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // ===== 3. 点击座位 =====
     function toggleSeat(seatEl, seatData) {
         const idx = selectedSeats.findIndex(s => s.label === seatData.label);
         if (idx >= 0) {
@@ -356,7 +322,6 @@ document.addEventListener('DOMContentLoaded', function () {
         updateUI();
     }
 
-    // ===== 4. 更新右侧面板 =====
     function updateUI() {
         selectedSeatsContainer.innerHTML = '';
         selectedSeats.forEach(s => {
@@ -382,7 +347,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // ===== 5. 提交锁座 =====
     confirmBtn.addEventListener('click', function () {
         if (selectedSeats.length === 0) return;
 
@@ -395,7 +359,6 @@ document.addEventListener('DOMContentLoaded', function () {
             seats: selectedSeats.map(s => s.label)
         };
 
-        // ★ apiFetch 遇 401 弹全局登录框，登录后自动重试
         apiFetch('/api/orders', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -419,7 +382,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // ===== 启动 =====
     loadSeats();
 });
 </script>

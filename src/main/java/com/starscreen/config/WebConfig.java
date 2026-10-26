@@ -1,27 +1,31 @@
 package com.starscreen.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import lombok.RequiredArgsConstructor;
+
+/**
+ * 拦截器注册。
+ *
+ * <p>执行顺序：防重放 → 登录 → 管理员。
+ *
+ * <p><b>NOTE</b>：下方登录白名单与 LoginInterceptor 内部白名单重复，
+ * 修改时两处需同步。建议长期收敛为一份。
+ */
 @Configuration
+@RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
 
-    @Autowired
-    private LoginInterceptor loginInterceptor;
-
-    @Autowired
-    private AdminInterceptor adminInterceptor;
-    
-    @Autowired
-    private AntiReplayInterceptor antiReplayInterceptor; // 🚨 注入防重放拦截器
+    private final LoginInterceptor loginInterceptor;
+    private final AdminInterceptor adminInterceptor;
+    private final AntiReplayInterceptor antiReplayInterceptor;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        
-        // 1. 🚨 注册防重放拦截器 (只拦截写操作的订单接口，保护下单和支付)
-        // 注意：放在最前面，让恶意重放请求最快被拦截，节省系统资源
+
+        // 1. 防重放：只作用于订单写接口
         registry.addInterceptor(antiReplayInterceptor)
                 .addPathPatterns("/api/orders/**");
 
@@ -38,10 +42,9 @@ public class WebConfig implements WebMvcConfigurer {
                         "/api/seats/**",
                         "/api/movies/**",
                         "/api/schedules/**",
-                        "/api/cinemas/**"
-                );
+                        "/api/cinemas/**");
 
-        // 3. 管理员拦截（在登录拦截之后）
+        // 3. 管理员拦截
         registry.addInterceptor(adminInterceptor)
                 .addPathPatterns("/api/admin/**", "/admin/**");
     }

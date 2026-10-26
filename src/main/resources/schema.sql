@@ -1,23 +1,23 @@
 -- =========================================================
 -- 1. 清理旧表 (按外键依赖顺序反向删除)
 -- =========================================================
-DROP TABLE IF EXISTS t_order;
-DROP TABLE IF EXISTS seat;
-DROP TABLE IF EXISTS schedule;
-DROP TABLE IF EXISTS hall;
-DROP TABLE IF EXISTS cinema;
-DROP TABLE IF EXISTS movie;
-DROP TABLE IF EXISTS t_user;
-DROP TABLE IF EXISTS daily_box_office;
-DROP TABLE IF EXISTS expected_movie;
-DROP TABLE IF EXISTS top100_movie;
+--DROP TABLE IF EXISTS t_order;
+--DROP TABLE IF EXISTS seat;
+--DROP TABLE IF EXISTS schedule;
+--DROP TABLE IF EXISTS hall;
+--DROP TABLE IF EXISTS cinema;
+--DROP TABLE IF EXISTS movie;
+--DROP TABLE IF EXISTS t_user;
+--DROP TABLE IF EXISTS daily_box_office;
+--DROP TABLE IF EXISTS expected_movie;
+--DROP TABLE IF EXISTS top100_movie;
 
 -- =========================================================
 -- 2. 建表语句
 -- =========================================================
 
 -- 用户表
-CREATE TABLE t_user (
+CREATE TABLE IF NOT EXISTS t_user (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(100),

@@ -4,9 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
-/**
- * 发送短信验证码请求
- */
+/** 发送短信验证码请求。 */
 @Data
 public class SendSmsRequest {
 

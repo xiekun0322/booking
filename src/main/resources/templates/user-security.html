@@ -11,6 +11,13 @@
     a { text-decoration: none; color: inherit; }
     ul, li { list-style: none; }
 
+    /* 视觉隐藏标签，解决无障碍无标签警告 */
+    .sr-only {
+        position: absolute; width: 1px; height: 1px; padding: 0;
+        margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0);
+        white-space: nowrap; border-width: 0;
+    }
+
     .top-nav { height: 80px; border-bottom: 1px solid #e5e5e5; display: flex;
                align-items: center; padding: 0 15%; position: sticky; top: 0;
                background: #fff; z-index: 100; }
@@ -25,7 +32,6 @@
     .main-menu li a:hover { color: #1e3a8a; }
     .nav-right { margin-left: auto; display: flex; align-items: center; gap: 20px; }
 
-    /* 用户区 CSS */
     .user-area { display: flex; align-items: center; gap: 20px; }
     .user-dropdown { position: relative; cursor: pointer; }
     .user-name { color: #333; font-size: 14px; }
@@ -87,6 +93,15 @@
 
     .footer { background: #262426; color: #999; padding: 40px 0;
               font-size: 12px; line-height: 2; text-align: center; }
+
+    /* 【修复】覆盖原本弹窗里 div 的样式 */
+    .glm-close-btn {
+        position: absolute; top: 12px; right: 18px;
+        font-size: 26px; color: #999; cursor: pointer;
+        line-height: 1; background: transparent;
+        border: none; padding: 0; outline: none;
+    }
+    .glm-close-btn:hover { color: #1e3a8a; }
     </style>
 </head>
 <body>
@@ -142,7 +157,6 @@
             <button class="security-action" onclick="openBindModal()">绑定账号</button>
         </div>
 
-        <!-- ★ 危险区 -->
         <div class="danger-zone">
             <div class="danger-title">⚠️ 危险操作</div>
             <div class="danger-desc">
@@ -159,23 +173,26 @@
     <div>©2026 星幕影票 www.starscreen.com</div>
 </footer>
 
-<!-- 全局弹窗 -->
 <div th:replace="~{fragments/login-modal :: modal}"></div>
 <div th:replace="~{fragments/login-modal :: bindModal}"></div>
 
 <!-- 修改密码弹窗 -->
 <div class="glm-mask" id="changePwdModal">
     <div class="glm-box" style="width: 440px;">
-        <div class="glm-close" onclick="closeChangePwdModal()">×</div>
+        <!-- 【修复】使用 button 元素替代 div，符合无障碍规范 -->
+        <button class="glm-close-btn" onclick="closeChangePwdModal()" aria-label="关闭">×</button>
         <div class="glm-title">修改密码</div>
 
         <div class="glm-row">
+            <label for="oldPwd" class="sr-only">原密码</label>
             <input type="password" id="oldPwd" placeholder="请输入原密码">
         </div>
         <div class="glm-row">
+            <label for="newPwd" class="sr-only">新密码</label>
             <input type="password" id="newPwd" placeholder="新密码（8~20 位强密码）">
         </div>
         <div class="glm-row">
+            <label for="confirmPwd" class="sr-only">确认新密码</label>
             <input type="password" id="confirmPwd" placeholder="确认新密码">
         </div>
 
@@ -185,10 +202,11 @@
     </div>
 </div>
 
-<!-- ★ 注销账号弹窗 -->
+<!-- 注销账号弹窗 -->
 <div class="glm-mask" id="deleteAccountModal">
     <div class="glm-box" style="width: 440px;">
-        <div class="glm-close" onclick="closeDeleteAccountModal()">×</div>
+        <!-- 【修复】使用 button 元素替代 div -->
+        <button class="glm-close-btn" onclick="closeDeleteAccountModal()" aria-label="关闭">×</button>
         <div class="glm-title" style="color: #dc2626;">⚠️ 注销账号</div>
 
         <p style="font-size: 13px; color: #999; margin-bottom: 20px; line-height: 1.7;">
@@ -197,6 +215,7 @@
         </p>
 
         <div class="glm-row">
+            <label for="deletePwd" class="sr-only">密码</label>
             <input type="password" id="deletePwd" placeholder="请输入登录密码">
         </div>
 

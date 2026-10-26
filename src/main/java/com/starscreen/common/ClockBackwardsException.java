@@ -1,11 +1,13 @@
 package com.starscreen.common;
 
 /**
- * 【功能】时钟回拨专用异常。
- *         当服务器时间发生回退，导致雪花算法可能生成重复 ID 时抛出。
+ * 雪花算法时钟回拨异常。
+ *
+ * <p>服务器时间发生回退时，生成的 ID 可能重复，故直接抛出。
+ * {@link GlobalExceptionHandler} 会记录 error 级别日志并返回通用错误。
  */
 public class ClockBackwardsException extends RuntimeException {
-    
+
     public ClockBackwardsException(String message) {
         super(message);
     }

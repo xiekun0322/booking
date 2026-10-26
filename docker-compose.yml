@@ -1,0 +1,21 @@
+# 放在服务器的 /opt/starscreen/ 目录下
+version: '3.8'
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: movie_ticketing
+    ports:
+      - "3306:3306"
+  app:
+    image: your-dockerhub-username/starscreen-ticketing:latest
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+    environment:
+      # 注入你的数据库配置，覆盖 application.properties 里的配置
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/movie_ticketing?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root_password

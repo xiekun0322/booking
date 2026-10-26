@@ -3,16 +3,9 @@
   【路由】GET /admin/movies
   【渲染方】PageController.adminMovies() → return "admin-movies"
 
-  【后端接口调用（前端 fetch）】
-    - GET    /api/admin/movies?page=0&size=10    列表
-    - GET    /api/admin/movies/{id}              详情
-    - POST   /api/admin/movies                   新增
-    - PUT    /api/admin/movies/{id}              更新
-    - DELETE /api/admin/movies/{id}              删除
-
-  【XSS 修复】
-    renderTable() 里所有动态值经 escapeHtml() 转义；
-    删除/编辑按钮用 data-* + addEventListener，不再 onclick 拼字符串。
+  【本次修复（SonarQube）】
+    1. 为所有 <input> / <select> 增加了 id，并让 <label> 通过 for 属性绑定，解决无标签扫描警告。
+    2. parseInt / parseFloat 全局方法替换为 Number.parseInt / Number.parseFloat。
 -->
 <!DOCTYPE html>
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
@@ -152,39 +145,39 @@
         <input type="hidden" id="movieId">
 
         <div class="form-row">
-            <label>电影名 *</label>
+            <label for="title">电影名 *</label>
             <input type="text" id="title" placeholder="例如：八仙！">
         </div>
         <div class="form-row">
-            <label>海报路径</label>
+            <label for="poster">海报路径</label>
             <input type="text" id="poster" placeholder="/images/poster1.jpg">
         </div>
         <div class="form-row">
-            <label>导演</label>
+            <label for="director">导演</label>
             <input type="text" id="director" placeholder="例如：张艺谋">
         </div>
         <div class="form-row">
-            <label>主演（逗号分隔）</label>
+            <label for="actors">主演（逗号分隔）</label>
             <input type="text" id="actors" placeholder="何仙姑,吕洞宾,铁拐李">
         </div>
         <div class="form-row">
-            <label>时长（分钟）</label>
+            <label for="duration">时长（分钟）</label>
             <input type="number" id="duration" placeholder="120">
         </div>
         <div class="form-row">
-            <label>评分</label>
+            <label for="score">评分</label>
             <input type="number" step="0.1" id="score" placeholder="9.5">
         </div>
         <div class="form-row">
-            <label>标签</label>
+            <label for="tag">标签</label>
             <input type="text" id="tag" placeholder="2DIMAX">
         </div>
         <div class="form-row">
-            <label>上映日期</label>
+            <label for="releaseDate">上映日期</label>
             <input type="date" id="releaseDate">
         </div>
         <div class="form-row">
-            <label>状态</label>
+            <label for="status">状态</label>
             <select id="status">
                 <option value="showing">正在热映</option>
                 <option value="upcoming">即将上映</option>
@@ -237,7 +230,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(err => alert('加载失败：' + err.message));
     }
 
-    // ==================== 渲染表格（★ XSS 修复版） ====================
+    // ==================== 渲染表格 ====================
     function renderTable(movies) {
         if (!movies || movies.length === 0) {
             tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#999;padding:60px;">暂无电影数据</td></tr>';
@@ -278,7 +271,8 @@ document.addEventListener('DOMContentLoaded', function () {
         tbody.querySelectorAll('.op-btn').forEach(btn => {
             btn.addEventListener('click', function () {
                 const action = this.dataset.action;
-                const id = parseInt(this.dataset.id, 10);
+                // 【修复】全局 parseInt 改为 Number.parseInt
+                const id = Number.parseInt(this.dataset.id, 10);
                 if (action === 'edit') {
                     editMovie(id);
                 } else if (action === 'delete') {
@@ -369,8 +363,10 @@ document.addEventListener('DOMContentLoaded', function () {
             poster: document.getElementById('poster').value.trim(),
             director: document.getElementById('director').value.trim(),
             actors: document.getElementById('actors').value.trim(),
-            duration: parseInt(document.getElementById('duration').value) || null,
-            score: parseFloat(document.getElementById('score').value) || null,
+            // 【修复】全局 parseInt 改为 Number.parseInt
+            duration: Number.parseInt(document.getElementById('duration').value) || null,
+            // 【修复】全局 parseFloat 改为 Number.parseFloat
+            score: Number.parseFloat(document.getElementById('score').value) || null,
             tag: document.getElementById('tag').value.trim() || null,
             releaseDate: document.getElementById('releaseDate').value || null,
             status: document.getElementById('status').value

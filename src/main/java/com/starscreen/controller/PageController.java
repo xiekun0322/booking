@@ -41,13 +41,7 @@ public class PageController {
     private final OrderService orderService;
     private final AdminService adminService;
     private final SidebarService sidebarService;
-    
-    @GetMapping("/test")
-    @ResponseBody
-    public String test() {
-        return "PageController 工作正常";
-    }
-
+        
     // ==================== 首页：只展示 8 部 ====================
     @GetMapping("/")
     public String index(Model model) {

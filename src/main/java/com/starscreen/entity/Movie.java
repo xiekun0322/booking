@@ -1,8 +1,15 @@
 package com.starscreen.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import lombok.Data;
 
+/** 电影实体，映射表 movie。 */
 @Data
 @Entity
 @Table(name = "movie")
@@ -26,6 +33,7 @@ public class Movie {
     @Column(length = 50)
     private String releaseDate;
 
+    /** showing / upcoming。 */
     @Column(length = 20)
     private String status;
 
@@ -39,11 +47,11 @@ public class Movie {
 
     private Integer duration;
 
-    /** ★ 新增：剧情简介 */
+    /** 剧情简介。 */
     @Column(columnDefinition = "TEXT")
     private String plot;
 
-    /** ★ 新增：类型（逗号分隔：剧情,动作,科幻） */
+    /** 类型（逗号分隔，如 "剧情,动作,科幻"）。 */
     @Column(length = 200)
     private String genres;
 
