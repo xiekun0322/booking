@@ -1,16 +1,10 @@
 package com.starscreen.controller;
 
 import com.starscreen.common.Result;
-import com.starscreen.dto.MovieRequest;
 import com.starscreen.entity.Movie;
 import com.starscreen.service.MovieService;
-
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -60,14 +54,11 @@ public class AdminMovieController {
      * @return Result<Page<Movie>>
      */
     @GetMapping
-    public Result<Page<Movie>> list(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") 
-            @Max(value = 100, message = "每页最多只能查100条，请减小 size") int size) { // 【新增】@Max 校验
-        
+    public Result<Page<Movie>> list(@RequestParam(defaultValue = "0") int page,
+                                     @RequestParam(defaultValue = "10") int size) {
         return Result.success(movieService.listPaged(page, size));
     }
-    
+
     /**
      * 【功能】查询单部电影详情。
      * 【调用链】admin-movies.html: editMovie(id)
@@ -92,28 +83,7 @@ public class AdminMovieController {
      * 【异常】电影名为空 → BusinessException → GlobalExceptionHandler → Result{code=500}
      */
     @PostMapping
-    public Result<Movie> create(@RequestBody @Valid MovieRequest req) {
-        
-        Movie movie = new Movie();
-        
-        // 核心防御：使用 Jsoup 清洗恶意脚本
-        // Jsoup.clean 会把所有的 HTML 标签（包括 <script>）全都剥离掉，只保留纯文本
-        movie.setTitle(org.jsoup.Jsoup.clean(req.getTitle(), org.jsoup.safety.Safelist.none()));
-        movie.setPlot(org.jsoup.Jsoup.clean(req.getPlot(), org.jsoup.safety.Safelist.none()));
-        
-        // 其他非核心字段照常赋值
-        movie.setPoster(req.getPoster());
-        movie.setDuration(req.getDuration());
-        movie.setScore(req.getScore());
-        movie.setTag(req.getTag());
-        movie.setReleaseDate(req.getReleaseDate());
-        movie.setStatus(req.getStatus());
-        movie.setDirector(req.getDirector());
-        movie.setActors(req.getActors());
-        movie.setGenres(req.getGenres());
-        
-        movie.setCreateTime(java.time.LocalDateTime.now().toString());
-        
+    public Result<Movie> create(@RequestBody Movie movie) {
         return Result.success(movieService.create(movie));
     }
 
@@ -125,21 +95,7 @@ public class AdminMovieController {
      * 【注意】只有请求里非 null 的字段才会覆盖原值。
      */
     @PutMapping("/{id}")
-    public Result<Movie> update(@PathVariable Long id, @RequestBody @Valid MovieRequest req) {
-        // 同理，在这里把 req 转成 movie
-        Movie movie = new Movie();
-        movie.setTitle(req.getTitle());
-        movie.setPoster(req.getPoster());
-        movie.setDuration(req.getDuration());
-        movie.setScore(req.getScore());
-        movie.setTag(req.getTag());
-        movie.setReleaseDate(req.getReleaseDate());
-        movie.setStatus(req.getStatus());
-        movie.setDirector(req.getDirector());
-        movie.setActors(req.getActors());
-        movie.setPlot(req.getPlot());
-        movie.setGenres(req.getGenres());
-        
+    public Result<Movie> update(@PathVariable Long id, @RequestBody Movie movie) {
         return Result.success(movieService.update(id, movie));
     }
 

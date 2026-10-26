@@ -19,23 +19,33 @@ import lombok.Data;
 @Table(name = "t_order")
 public class Order {
 
+    /** 主键，自增 */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** 订单号，唯一，如 "MO1696123456789012" */
     @Column(unique = true, length = 50)
     private String orderNo;
 
+    /** 下单用户 ID（用于越权校验：只能看/操作自己的订单） */
     private Long userId;
+
+    /** 场次 ID */
     private Long scheduleId;
+
+    /** 电影 ID（快照，便于统计） */
     private Long movieId;
 
+    /** 电影名（快照） */
     @Column(length = 100)
     private String movieTitle;
 
+    /** 影院名（快照） */
     @Column(length = 100)
     private String cinemaName;
 
+    /** 影厅名（快照） */
     @Column(length = 50)
     private String hallName;
 

@@ -49,3 +49,4 @@ public class WebConfig implements WebMvcConfigurer {
                 .addPathPatterns("/api/admin/**", "/admin/**");
     }
 }
+

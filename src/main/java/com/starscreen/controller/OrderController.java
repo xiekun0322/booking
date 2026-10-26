@@ -4,7 +4,6 @@ import com.starscreen.common.Result;
 import com.starscreen.common.SessionConstants;
 import com.starscreen.dto.CreateOrderRequest;
 import com.starscreen.entity.Order;
-import com.starscreen.mock.MockWechatPayServer;
 import com.starscreen.service.OrderService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -41,8 +40,6 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
-    private final MockWechatPayServer mockWechatPayServer;
-    // (如果你用了 @RequiredArgsConstructor，直接加个 private final 字段就行，不需要写 @Autowired)
 
     /**
      * 【功能】查询当前用户的全部订单。
@@ -68,15 +65,13 @@ public class OrderController {
      *          - userId 为 null 时【不拦截】，会返回订单详情！
      *            虽然 LoginInterceptor 会拦住未登录请求，
      *            但业务代码更严谨的写法应该加 userId == null 判空。
-     */    
+     */
     @GetMapping("/{id}")
     public Result<Order> detail(@PathVariable Long id, HttpSession session) {
         Long userId = (Long) session.getAttribute(SessionConstants.USER_ID);
         Order order = orderService.getById(id);
         if (order == null) return Result.error(404, "订单不存在");
-        
-        // 【修复】：userId 为 null（没登录）或者不匹配，直接拒绝
-        if (userId == null || !userId.equals(order.getUserId())) {
+        if (userId != null && !userId.equals(order.getUserId())) {
             return Result.error(403, "无权查看该订单");
         }
         return Result.success(order);
@@ -117,30 +112,7 @@ public class OrderController {
     public Result<String> pay(@PathVariable Long id, HttpSession session) {
         Long userId = (Long) session.getAttribute(SessionConstants.USER_ID);
         if (userId == null) return Result.error(401, "请先登录");
-        
-        // 1. 发起统一下单
-        String payUrl = orderService.createPayTransaction(userId, id);
-        
-        // 2. 调用咱们刚才新建的 Mock 类，让它 3秒后自动回调
-        mockWechatPayServer.simulateUserPayAndCallback(id);
-        
-        // 3. 返回给前端
-        return Result.success(payUrl); 
-    }
-
-    /**
-     * 【新增】模拟第三方（微信/支付宝）的异步回调接口！
-     * 这个接口不是给前端调的，是给“第三方服务器”调的！
-     */
-    @PostMapping("/pay/callback/mock")
-    public String mockPayCallback(@RequestParam Long orderId, @RequestParam String status) {
-        // 真实场景下，这里必须验签（防止黑客伪造微信发请求）
-        // 假设 status == "SUCCESS" 代表第三方确认用户付钱了
-        if ("SUCCESS".equals(status)) {
-        	orderService.handlePayCallback(orderId);
-            return "success"; // 告诉微信：我收到了，别重发了
-        }
-        return "fail";
+        return Result.success(orderService.pay(userId, id));
     }
 
     /**

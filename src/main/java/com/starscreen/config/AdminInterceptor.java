@@ -37,7 +37,6 @@ public class AdminInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request,
                              HttpServletResponse response,
                              Object handler) throws Exception {
-
         HttpSession session = request.getSession(false);
         Object role = session == null ? null : session.getAttribute(SessionConstants.ROLE);
         Object userId = session == null ? null : session.getAttribute(SessionConstants.USER_ID);
@@ -76,3 +75,4 @@ public class AdminInterceptor implements HandlerInterceptor {
         return false;
     }
 }
+

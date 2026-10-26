@@ -166,10 +166,7 @@ public class UserService {
     }
 
     // ==================== 注销账号（软删除）====================
-    /**
-     * 注销账号（软删除 + 释放唯一索引）
-     */
-    
+
     @Transactional
     public void deleteAccount(Long userId, String password) {
         User user = userRepository.findById(userId)
@@ -180,21 +177,9 @@ public class UserService {
             throw new BusinessException("密码错误，无法注销");
         }
 
-        // 2. 软删除
         user.setDeleted(true);
-
-        // 3. 腾出唯一索引（加上时间戳后缀）
-        long timestamp = System.currentTimeMillis();
-        String oldUsername = user.getUsername();
-        String safeUsername = oldUsername.length() > 20 ? oldUsername.substring(0, 20) : oldUsername;
-        user.setUsername(safeUsername + "_del_" + timestamp);
-        
-        if (user.getPhone() != null) {
-            user.setPhone("del_" + timestamp + "_" + user.getPhone());
-        }
-
         userRepository.save(user);
-        log.info("用户注销成功：id={}", userId);
+        log.info("用户注销账号（软删除）：id={}, username={}", userId, user.getUsername());
     }
 
     // ==================== 查询 ====================

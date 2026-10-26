@@ -4,12 +4,8 @@ import com.starscreen.entity.Order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -36,8 +32,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
      * @param status pending / paid / cancelled
      */
     List<Order> findByStatus(String status);
-    
-    long countByUserIdAndStatus(Long userId, String status);
 
     /**
      * 【功能】全部订单，按 ID 倒序。
@@ -96,7 +90,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
      * 【调用链】AdminService.getStats() → stats.totalRevenue → admin.html 大数字卡片
      */
     @Query("SELECT COALESCE(SUM(o.totalPrice), 0) FROM Order o WHERE o.status = 'paid'")
-    BigDecimal sumPaidTotalPrice();
+    Double sumPaidTotalPrice();
 
     /**
      * 【功能】热销 TOP 电影（按票房倒序）。
@@ -127,14 +121,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
      * 【⚠️ 注意】用字符串前 10 位当日期，是演示环境的简化写法。
      *            正确做法：payTime 改用 LocalDateTime 类型。
      */
-    /**
-     * 【修复】按天统计票房趋势。
-     * 使用 FUNCTION('DATE', ...) 交由底层数据库处理时间格式化
-     */
-    @Query("SELECT FUNCTION('DATE', o.payTime), SUM(o.totalPrice), COUNT(o) " +
+    @Query("SELECT SUBSTRING(o.payTime, 1, 10), SUM(o.totalPrice), COUNT(o) " +
            "FROM Order o WHERE o.status = 'paid' AND o.payTime IS NOT NULL " +
-           "GROUP BY FUNCTION('DATE', o.payTime) " +
-           "ORDER BY FUNCTION('DATE', o.payTime) ASC")
+           "GROUP BY SUBSTRING(o.payTime, 1, 10) " +
+           "ORDER BY SUBSTRING(o.payTime, 1, 10) ASC")
     List<Object[]> dailyRevenue();
     
     // 进阶版 SQL：加上时间判断  
