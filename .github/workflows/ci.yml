@@ -2,32 +2,34 @@ name: Java CI with Maven
 
 on:
   push:
-    branches: [ "main", "master" ] # 触发分支
+    branches: [ "main" ]
   pull_request:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+    # 1. 拉取代码（使用最新的 v4 版本）
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
+    # 2. 设置 JDK 21（你的项目使用的是 Java 21）
     - name: Set up JDK 21
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: '21'
         distribution: 'temurin'
         cache: maven
 
-    # 编译并打包（跳过测试以加快速度，正式项目建议加上测试）
+    # 3. 编译并打包（跳过测试以加快速度，如果你需要跑测试，把 -DskipTests 删掉即可）
     - name: Build with Maven
       run: mvn -B package -DskipTests
-
-    # 将打好的 jar 包保存为工件，以便后续部署使用
+      
+    # 4. （可选）如果你确实需要把打包好的 jar 文件保存下来供下载，使用最新的 v4
     - name: Upload JAR artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: app-jar
         path: target/*.jar
