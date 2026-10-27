@@ -1,35 +1,22 @@
 ﻿<!--
   【模板】movie-detail.html —— 电影详情页
   【路由】GET /movie/detail/{id}
-  【渲染方】PageController.movieDetail(id, model) → return "movie-detail"
+  【渲染方】PageController.movieDetail(id, model)
 
-  【Thymeleaf 变量】
-    - movie    Movie   当前电影（可能为 null，模板做了兜底）
+  【本次修复】
+    1. 把 <style> 从 <header> 内移到 <head> 内（原位置会导致样式加载时机错乱）
+    2. 补全顶部导航的 logo 和 main-menu（原来只有右侧用户区，左侧空白）
 
-  【内嵌 JS 调用】
-    - POST /api/user/logout   退出登录
-
-  【导航入口】
-    首页电影海报 / 标题点击 → 本页
-    本页"特惠购票"按钮 → /cinemas/{movie.id}
-
-  【⚠️ 已知问题】
-    1. "剧情简介"、"演职人员"、"图集"、"票房" 都是硬编码假数据
-    2. "预告片"侧边栏也是硬编码
-    3. 底部"票房"三张卡（昨日排名/首周票房/累计票房）写死
+  【已知遗留】
+    "剧情简介"、"演职人员"、"图集"、"票房" 仍是硬编码假数据，需要后端提供接口后再改造
 -->
 <!DOCTYPE html>
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title th:text="${movie != null ? movie.title : '电影详情'} + '_星幕影票'">电影详情</title>
-    <link rel="stylesheet" href="/css/login-modal.css"> 
-</head>
-<body>
-
-    <!-- ===== 顶部导航（与 index.html 相同结构）===== -->
-    <header class="top-nav">
-        <style>
+    <link rel="stylesheet" href="/css/login-modal.css">
+    <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: "Microsoft YaHei", Arial, sans-serif; background: #fff; color: #333; font-size: 14px; }
     a { text-decoration: none; color: inherit; }
@@ -42,7 +29,7 @@
     .main-menu { display: flex; height: 100%; }
     .main-menu li { height: 100%; }
     .main-menu li a { display: flex; align-items: center; height: 100%; padding: 0 20px; font-size: 16px; color: #333; }
-    .main-menu li.active a { color: #1e3a8a; }
+    .main-menu li a:hover { color: #1e3a8a; }
     .nav-right { margin-left: auto; display: flex; align-items: center; gap: 20px; }
     .nav-right > div { cursor: pointer; }
 
@@ -128,172 +115,169 @@
 
     .footer { background: #262426; color: #999; padding: 40px 0; margin-top: 60px; font-size: 12px; line-height: 2; text-align: center; }
     .footer a { color: #1e3a8a; margin: 0 5px; }
-</style>
-        <div class="nav-right">
-            <div>📱 APP下载 ▼</div>
-            <!-- 未登录 -->
-            <div th:if="${session.username == null}">
-                <a th:href="@{/login}" style="color:#1e3a8a; font-weight:bold;">登录 / 注册</a>
-            </div>
-            <!-- 已登录 -->
-            <div th:if="${session.username != null}" class="user-menu">
-                <a th:href="@{/orders}"><span style="color:#1e3a8a;">🎟️ 我的订单</span></a>
-                <div class="user-dropdown">
-                    <span class="user-name">👤 <span th:text="${session.username}">用户名</span> ▼</span>
-                    <div class="dropdown-menu">
-                        <a th:href="@{/orders}">我的订单</a>
-                        <a href="javascript:void(0)" id="logoutBtn">退出登录</a>
-                    </div>
+    </style>
+</head>
+<body>
+
+<!-- ===== 顶部导航（补全 logo + main-menu）===== -->
+<header class="top-nav">
+    <a th:href="@{/}" class="logo">
+        <div class="logo-icon">星</div>
+        <div class="logo-text">星幕影票</div>
+    </a>
+    <ul class="main-menu">
+        <li><a th:href="@{/}">首页</a></li>
+        <li><a th:href="@{/movies}">电影</a></li>
+        <li><a th:href="@{/cinemas}">影院</a></li>
+    </ul>
+    <div class="nav-right">
+        <div>📱 APP下载 ▼</div>
+        <div th:if="${session.username == null}">
+            <a th:href="@{/login}" style="color:#1e3a8a; font-weight:bold;">登录 / 注册</a>
+        </div>
+        <div th:if="${session.username != null}" class="user-menu">
+            <a th:href="@{/orders}"><span style="color:#1e3a8a;">🎟️ 我的订单</span></a>
+            <div class="user-dropdown">
+                <span class="user-name">👤 <span th:text="${session.username}">用户名</span> ▼</span>
+                <div class="dropdown-menu">
+                    <a th:href="@{/orders}">我的订单</a>
+                    <a href="javascript:void(0)" id="logoutBtn">退出登录</a>
                 </div>
             </div>
         </div>
-    </header>
+    </div>
+</header>
 
-    <!-- ===== 顶部电影信息大图 ===== -->
-    <!-- 所有字段都做了 movie != null 兜底 -->
-    <div class="movie-header">
-        <div class="movie-header-content">
-            <div class="movie-poster">
-                <div class="poster-tag" th:if="${movie != null and movie.tag != null}" th:text="${movie.tag}">2DIMAX</div>
-                <div class="poster-img"
-                     th:style="${movie != null ? 'background-image: url(' + movie.poster + '); background-size: cover; background-position: center;' : 'background: #1a1a1a;'}"></div>
-            </div>
-            <div class="movie-info">
-                <h1 class="movie-title" th:text="${movie != null ? movie.title : '未知电影'}">电影标题</h1>
+<!-- ===== 顶部电影信息大图 ===== -->
+<div class="movie-header">
+    <div class="movie-header-content">
+        <div class="movie-poster">
+            <div class="poster-tag" th:if="${movie != null and movie.tag != null}" th:text="${movie.tag}">2DIMAX</div>
+            <div class="poster-img"
+                 th:style="${movie != null ? 'background-image: url(' + movie.poster + '); background-size: cover; background-position: center;' : 'background: #1a1a1a;'}"></div>
+        </div>
+        <div class="movie-info">
+            <h1 class="movie-title" th:text="${movie != null ? movie.title : '未知电影'}">电影标题</h1>
 
-                <!-- 上映日期 -->
-                <div class="movie-meta" th:if="${movie != null}"
-                     th:text="${movie.releaseDate} + ' 中国大陆上映'">上映日期</div>
+            <div class="movie-meta" th:if="${movie != null}"
+                 th:text="${movie.releaseDate} + ' 中国大陆上映'">上映日期</div>
 
-                <!-- 导演 -->
-                <div class="movie-detail-row" th:if="${movie != null and movie.director != null}">
-                    <span class="label">导演：</span>
-                    <span class="value" th:text="${movie.director}">导演名</span>
-                </div>
-
-                <!-- 主演 -->
-                <div class="movie-detail-row" th:if="${movie != null and movie.actors != null}">
-                    <span class="label">主演：</span>
-                    <span class="value" th:text="${movie.actors}">演员列表</span>
-                </div>
-
-                <!-- 片长 -->
-                <div class="movie-detail-row" th:if="${movie != null and movie.duration != null}">
-                    <span class="label">片长：</span>
-                    <span class="value" th:text="${movie.duration} + ' 分钟'">0 分钟</span>
-                </div>
-
-                <!-- 想看 / 评分按钮（装饰） -->
-                <div class="movie-actions">
-                    <button class="action-btn">♡ 想看</button>
-                    <button class="action-btn">★ 评分</button>
-                </div>
-
-                <!-- ★ 关键跳转：进入选影院页 -->
-                <a th:href="@{/cinemas/{id}(id=${movie != null ? movie.id : 0})}" class="buy-ticket-btn">特惠购票</a>
+            <div class="movie-detail-row" th:if="${movie != null and movie.director != null}">
+                <span class="label">导演：</span>
+                <span class="value" th:text="${movie.director}">导演名</span>
             </div>
 
-            <!-- 右侧评分卡（部分字段硬编码）-->
-            <div class="movie-stats">
-                <div class="rating-label">星幕口碑</div>
-                <div class="rating-score"
-                     th:text="${movie != null and movie.score != null ? movie.score : '--'}">9.5</div>
-                <div class="rating-stars">★★★★★</div>
-                <div class="rating-count">11.3万人评分</div>   <!-- ⚠️ 硬编码 -->
-                <div class="box-office-label">累计票房</div>
-                <div class="box-office-value">6.17 <span>亿</span></div>   <!-- ⚠️ 硬编码 -->
+            <div class="movie-detail-row" th:if="${movie != null and movie.actors != null}">
+                <span class="label">主演：</span>
+                <span class="value" th:text="${movie.actors}">演员列表</span>
             </div>
+
+            <div class="movie-detail-row" th:if="${movie != null and movie.duration != null}">
+                <span class="label">片长：</span>
+                <span class="value" th:text="${movie.duration} + ' 分钟'">0 分钟</span>
+            </div>
+
+            <div class="movie-actions">
+                <button class="action-btn">♡ 想看</button>
+                <button class="action-btn">★ 评分</button>
+            </div>
+
+            <a th:href="@{/cinemas/{id}(id=${movie != null ? movie.id : 0})}" class="buy-ticket-btn">特惠购票</a>
+        </div>
+
+        <div class="movie-stats">
+            <div class="rating-label">星幕口碑</div>
+            <div class="rating-score"
+                 th:text="${movie != null and movie.score != null ? movie.score : '--'}">9.5</div>
+            <div class="rating-stars">★★★★★</div>
+            <div class="rating-count">11.3万人评分</div>
+            <div class="box-office-label">累计票房</div>
+            <div class="box-office-value">6.17 <span>亿</span></div>
         </div>
     </div>
+</div>
 
-    <!-- ===== 主体内容（大量硬编码）===== -->
-    <div class="container">
-        <main class="main-content">
-            <div class="breadcrumb">
-                <a th:href="@{/}">星幕影票</a> > <a href="#">电影</a> >
-                <span th:text="${movie != null ? movie.title : '详情'}">电影名</span>
+<!-- ===== 主体内容 ===== -->
+<div class="container">
+    <main class="main-content">
+        <div class="breadcrumb">
+            <a th:href="@{/}">星幕影票</a> > <a href="#">电影</a> >
+            <span th:text="${movie != null ? movie.title : '详情'}">电影名</span>
+        </div>
+
+        <div class="tabs">
+            <div class="tab-item active">介绍</div>
+            <div class="tab-item">演职人员</div>
+            <div class="tab-item">奖项</div>
+            <div class="tab-item">图集</div>
+        </div>
+
+        <div class="section-title"><h3>剧情简介</h3></div>
+        <p class="plot-summary">
+            影片以家喻户晓的传统民间故事为灵感进行创作，金牌班底脑洞大开，精彩好戏轮番上演。
+        </p>
+
+        <div class="section-title"><h3>演职人员</h3><span class="more">全部 ></span></div>
+        <div class="cast-list">
+            <div class="cast-item"><div class="cast-avatar" style="background:#ccc;"></div><div class="cast-name">演员甲</div><div class="cast-role">饰：角色A</div></div>
+        </div>
+
+        <div class="section-title"><h3>图集</h3><span class="more">全部 ></span></div>
+        <div class="gallery">
+            <div class="gallery-item" style="background:#e74c3c;"></div>
+        </div>
+
+        <div class="section-title"><h3>影片资料</h3></div>
+        <div class="movie-facts">
+            <div class="fact-card">
+                <div class="fact-label">📦 出品发行</div>
+                <div class="fact-value">星幕影业文化传媒有限公司</div>
             </div>
-
-            <div class="tabs">
-                <div class="tab-item active">介绍</div>
-                <div class="tab-item">演职人员</div>
-                <div class="tab-item">奖项</div>
-                <div class="tab-item">图集</div>
+            <div class="fact-card">
+                <div class="fact-label">⚙️ 技术参数</div>
+                <div class="fact-value"
+                     th:text="${movie != null and movie.duration != null ? movie.duration + ' 分钟' : '2小时40分钟'}">2小时40分钟</div>
             </div>
+        </div>
 
-            <!-- ⚠️ 剧情简介硬编码 -->
-            <div class="section-title"><h3>剧情简介</h3></div>
-            <p class="plot-summary">
-                影片以家喻户晓的传统民间故事为灵感进行创作，金牌班底脑洞大开，精彩好戏轮番上演。
-            </p>
+        <div class="section-title"><h3>票房</h3><span class="more">票房详情 ></span></div>
+        <div class="box-office-grid">
+            <div class="box-office-card"><div class="value">4</div><div class="label">昨日排名</div></div>
+            <div class="box-office-card"><div class="value">20806</div><div class="label">首周票房(万)</div></div>
+            <div class="box-office-card"><div class="value">194951</div><div class="label">累计票房(万)</div></div>
+        </div>
+    </main>
 
-            <!-- ⚠️ 演职人员硬编码 -->
-            <div class="section-title"><h3>演职人员</h3><span class="more">全部 ></span></div>
-            <div class="cast-list">
-                <div class="cast-item"><div class="cast-avatar" style="background:#ccc;"></div><div class="cast-name">演员甲</div><div class="cast-role">饰：角色A</div></div>
-                <!-- ... 其余 4 个 ... -->
+    <aside class="sidebar">
+        <div class="sidebar-section">
+            <div class="sidebar-title">预告片</div>
+            <div class="trailer-item">
+                <div class="trailer-thumb" style="background:#e74c3c;"><span class="trailer-num">1</span></div>
+                <div class="trailer-info"><div class="trailer-title">官方预告片 01</div><div class="trailer-count">320.1万</div></div>
             </div>
+        </div>
+    </aside>
+</div>
 
-            <!-- ⚠️ 图集硬编码（彩色方块）-->
-            <div class="section-title"><h3>图集</h3><span class="more">全部 ></span></div>
-            <div class="gallery">
-                <div class="gallery-item" style="background:#e74c3c;"></div>
-                <!-- ... -->
-            </div>
+<footer class="footer">
+    <div>关于星幕：<a href="#">关于我们</a> | <a href="#">董事会成员</a></div>
+    <div>©2026 星幕影票 www.starscreen.com</div>
+</footer>
 
-            <!-- 影片资料：片长用 movie.duration，出品方硬编码 -->
-            <div class="section-title"><h3>影片资料</h3></div>
-            <div class="movie-facts">
-                <div class="fact-card">
-                    <div class="fact-label">📦 出品发行</div>
-                    <div class="fact-value">星幕影业文化传媒有限公司</div>
-                </div>
-                <div class="fact-card">
-                    <div class="fact-label">⚙️ 技术参数</div>
-                    <div class="fact-value"
-                         th:text="${movie != null and movie.duration != null ? movie.duration + ' 分钟' : '2小时40分钟'}">2小时40分钟</div>
-                </div>
-            </div>
-
-            <!-- ⚠️ 票房三张卡硬编码 -->
-            <div class="section-title"><h3>票房</h3><span class="more">票房详情 ></span></div>
-            <div class="box-office-grid">
-                <div class="box-office-card"><div class="value">4</div><div class="label">昨日排名</div></div>
-                <div class="box-office-card"><div class="value">20806</div><div class="label">首周票房(万)</div></div>
-                <div class="box-office-card"><div class="value">194951</div><div class="label">累计票房(万)</div></div>
-            </div>
-        </main>
-
-        <!-- 侧边栏预告片（硬编码）-->
-        <aside class="sidebar">
-            <div class="sidebar-section">
-                <div class="sidebar-title">预告片</div>
-                <div class="trailer-item">
-                    <div class="trailer-thumb" style="background:#e74c3c;"><span class="trailer-num">1</span></div>
-                    <div class="trailer-info"><div class="trailer-title">官方预告片 01</div><div class="trailer-count">320.1万</div></div>
-                </div>
-                <!-- ... -->
-            </div>
-        </aside>
-    </div>
-
-    <footer class="footer"><!-- ... --></footer>
-
-    <script>
-        // 退出登录
-        document.addEventListener('DOMContentLoaded', function () {
-            const logoutBtn = document.getElementById('logoutBtn');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', function () {
-                    if (!confirm('确定要退出登录吗？')) return;
-                    fetch('/api/user/logout', { method: 'POST' })
-                        .then(res => res.json())
-                        .then(() => { window.location.href = '/'; })
-                        .catch(() => { window.location.href = '/'; });
-                });
-            }
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function () {
+            if (!confirm('确定要退出登录吗？')) return;
+            fetch('/api/user/logout', { method: 'POST' })
+                .then(res => res.json())
+                .then(() => { window.location.href = '/'; })
+                .catch(() => { window.location.href = '/'; });
         });
-    </script>
+    }
+});
+</script>
 
 </body>
 </html>

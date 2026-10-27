@@ -1,0 +1,6 @@
+projectKey=Movie-Theater-Ticketing-Management-System
+serverUrl=http://localhost:9000
+serverVersion=26.10.0.133078
+dashboardUrl=http://localhost:9000/dashboard?id=Movie-Theater-Ticketing-Management-System
+ceTaskId=210bcee0-7d86-42c1-9565-f7d2ef432b87
+ceTaskUrl=http://localhost:9000/api/ce/task?id=210bcee0-7d86-42c1-9565-f7d2ef432b87

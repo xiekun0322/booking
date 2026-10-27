@@ -6,14 +6,10 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
- * 【功能】重置密码请求。
- *         用户在登录页点「忘记密码？」→ 手机验证码校验通过后提交。
+ * 忘记密码重置请求（登录页「忘记密码」场景）。
  *
- * 【调用链】
- *   login.html → 忘记密码弹窗 → POST /api/user/reset-password
- *   → UserController.resetPassword(@Valid ResetPasswordRequest)
- *   → SmsService.verifyCode(phone, code)    // 校验验证码
- *   → UserService.resetPassword(phone, newPassword)
+ * <p>调用链：login.html → POST /api/user/reset-password
+ * → 校验验证码 → 更新密码。
  */
 @Data
 public class ResetPasswordRequest {
@@ -30,7 +26,6 @@ public class ResetPasswordRequest {
     @Size(min = 8, max = 20, message = "密码长度 8~20 位")
     @Pattern(
         regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*._-])[A-Za-z\\d!@#$%^&*._-]{8,20}$",
-        message = "密码必须包含大写字母、小写字母、数字和特殊字符，长度 8~20 位"
-    )
+        message = "密码必须包含大写字母、小写字母、数字和特殊字符，长度 8~20 位")
     private String newPassword;
 }

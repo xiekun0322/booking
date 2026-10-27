@@ -1,15 +1,32 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <title>登录 / 绑定账号 - 星幕影票</title>
+    <!-- 视觉隐藏标签的样式，用于满足无障碍规范且不破坏原有 UI -->
+    <style>
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+    </style>
 </head>
 <body>
 
 <!-- fragment 1：全局登录模态框 -->
-<div th:fragment="modal" id="globalLoginModal" class="glm-mask">
+<div th:fragment="modal" id="globalLoginModal" class="glm-mask" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle">
     <div class="glm-box">
-        <div class="glm-close" onclick="closeLoginModal()">×</div>
-        <div class="glm-title">登录星幕</div>
+        <!-- 【修复】将 div 改为 button，符合原生交互元素规范 -->
+        <button class="glm-close" onclick="closeLoginModal()" aria-label="关闭">×</button>
+        
+        <div class="glm-title" id="loginModalTitle">登录星幕</div>
 
         <div class="glm-tabs">
             <div class="glm-tab active" id="glmTabSms">手机号验证码</div>
@@ -22,11 +39,14 @@
             <div class="glm-row">
                 <div class="glm-input-group">
                     <div class="glm-prefix">+86</div>
+                    <!-- 【修复】补充视觉隐藏的 label 绑定 -->
+                    <label for="glmSmsPhone" class="sr-only">手机号</label>
                     <input type="tel" id="glmSmsPhone" placeholder="请输入手机号" maxlength="11">
                 </div>
             </div>
             <div class="glm-row">
                 <div class="glm-input-group">
+                    <label for="glmSmsCode" class="sr-only">短信验证码</label>
                     <input type="text" id="glmSmsCode" placeholder="请输入短信验证码" maxlength="6">
                     <button type="button" id="glmSendBtn">发送验证码</button>
                 </div>
@@ -36,9 +56,11 @@
 
         <div class="glm-panel" id="glmPanelPwd">
             <div class="glm-row">
+                <label for="glmPwdUsername" class="sr-only">用户名</label>
                 <input type="text" id="glmPwdUsername" placeholder="请输入用户名" autocomplete="username">
             </div>
             <div class="glm-row">
+                <label for="glmPwdPassword" class="sr-only">密码</label>
                 <input type="password" id="glmPwdPassword" placeholder="请输入密码" autocomplete="current-password">
             </div>
             <button class="glm-btn" id="glmPwdLoginBtn" disabled>登录</button>
@@ -50,10 +72,12 @@
 </div>
 
 <!-- fragment 2：绑定账号模态框 -->
-<div th:fragment="bindModal" id="bindAccountModal" class="glm-mask">
+<div th:fragment="bindModal" id="bindAccountModal" class="glm-mask" role="dialog" aria-modal="true" aria-labelledby="bindModalTitle">
     <div class="glm-box" style="width:440px;">
-        <div class="glm-close" onclick="closeBindModal()">×</div>
-        <div class="glm-title">绑定账号密码</div>
+        <!-- 【修复】将 div 改为 button -->
+        <button class="glm-close" onclick="closeBindModal()" aria-label="关闭">×</button>
+        
+        <div class="glm-title" id="bindModalTitle">绑定账号密码</div>
 
         <p style="font-size:13px;color:#999;margin-bottom:20px;line-height:1.7;">
             绑定后，您可以用用户名 + 密码登录，<br>
@@ -61,12 +85,16 @@
         </p>
 
         <div class="glm-row">
+            <!-- 【修复】补充视觉隐藏的 label 绑定 -->
+            <label for="bindUsername" class="sr-only">用户名</label>
             <input type="text" id="bindUsername" placeholder="用户名（2~20 位）" maxlength="20">
         </div>
         <div class="glm-row">
+            <label for="bindPassword" class="sr-only">密码</label>
             <input type="password" id="bindPassword" placeholder="密码（8~20 位强密码）">
         </div>
         <div class="glm-row">
+            <label for="bindConfirm" class="sr-only">确认密码</label>
             <input type="password" id="bindConfirm" placeholder="确认密码">
         </div>
 

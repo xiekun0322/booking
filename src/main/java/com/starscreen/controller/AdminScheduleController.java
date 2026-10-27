@@ -35,7 +35,6 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/admin/schedules")
-@CrossOrigin
 public class AdminScheduleController {
 
     @Autowired

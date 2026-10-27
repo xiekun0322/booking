@@ -1,12 +1,17 @@
 package com.starscreen.repository;
 
-import com.starscreen.entity.Order;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
-import java.util.List;
+import com.starscreen.entity.Order;
+
+import io.lettuce.core.dynamic.annotation.Param;
 
 /**
  * 【功能】订单数据访问层。
@@ -126,4 +131,13 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
            "GROUP BY SUBSTRING(o.payTime, 1, 10) " +
            "ORDER BY SUBSTRING(o.payTime, 1, 10) ASC")
     List<Object[]> dailyRevenue();
+    
+    // 进阶版 SQL：加上时间判断  
+    @Modifying
+    @Query("UPDATE Order o SET o.status = 'paid', o.payTime = :payTime WHERE o.id = :id AND o.status = 'pending'")
+    int updateToPaid(@Param("id") Long id, @Param("payTime") LocalDateTime payTime);
+
+    @Modifying
+    @Query("UPDATE Order o SET o.status = 'cancelled' WHERE o.id = :id AND o.status = 'pending'")
+    int updateToCancelled(@Param("id") Long id);
 }

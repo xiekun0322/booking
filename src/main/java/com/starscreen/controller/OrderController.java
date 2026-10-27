@@ -1,6 +1,7 @@
 package com.starscreen.controller;
 
 import com.starscreen.common.Result;
+import com.starscreen.common.SessionConstants;
 import com.starscreen.dto.CreateOrderRequest;
 import com.starscreen.entity.Order;
 import com.starscreen.service.OrderService;
@@ -50,7 +51,7 @@ public class OrderController {
      */
     @GetMapping
     public Result<List<Order>> list(HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
+        Long userId = (Long) session.getAttribute(SessionConstants.USER_ID);
         if (userId == null) return Result.error(401, "请先登录");
         return Result.success(orderService.listPagedByUser(userId, "all", 0, 1000).getContent());
     }
@@ -67,7 +68,7 @@ public class OrderController {
      */
     @GetMapping("/{id}")
     public Result<Order> detail(@PathVariable Long id, HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
+        Long userId = (Long) session.getAttribute(SessionConstants.USER_ID);
         Order order = orderService.getById(id);
         if (order == null) return Result.error(404, "订单不存在");
         if (userId != null && !userId.equals(order.getUserId())) {
@@ -91,22 +92,25 @@ public class OrderController {
      */
     @PostMapping
     public Result<Order> create(@RequestBody @Valid CreateOrderRequest req, HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
+        Long userId = (Long) session.getAttribute(SessionConstants.USER_ID);
         if (userId == null) return Result.error(401, "请先登录");
-        return Result.success(orderService.createOrder(userId, req.getScheduleId(), req.getSeats()));
+        
+        // 从请求体中拿到前端传来的验证码凭证
+        return Result.success(orderService.createOrder(
+                userId, 
+                req.getScheduleId(), 
+                req.getSeats(), 
+                req.getCaptchaTicket() // 记得去 CreateOrderRequest DTO 里加上这个字段
+        ));
     }
 
     /**
-     * 【功能】支付订单。
-     * 【调用链】movie-order.html: payBtn 点击
-     *           → POST /api/orders/{id}/pay
-     *           → orderService.pay(userId, id)
-     *           → 前端 reload 页面显示取票码
-     * 【异常】"订单已支付" / "订单状态不允许支付" / "无权操作"
+     * 【改造后】发起支付（预下单）。
+     * 此时不会更改订单状态，而是模拟向微信/支付宝统一下单，返回一个支付凭证。
      */
     @PostMapping("/{id}/pay")
-    public Result<Order> pay(@PathVariable Long id, HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
+    public Result<String> pay(@PathVariable Long id, HttpSession session) {
+        Long userId = (Long) session.getAttribute(SessionConstants.USER_ID);
         if (userId == null) return Result.error(401, "请先登录");
         return Result.success(orderService.pay(userId, id));
     }
@@ -120,7 +124,7 @@ public class OrderController {
      */
     @PostMapping("/{id}/cancel")
     public Result<Order> cancel(@PathVariable Long id, HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
+        Long userId = (Long) session.getAttribute(SessionConstants.USER_ID);
         if (userId == null) return Result.error(401, "请先登录");
         return Result.success(orderService.cancel(userId, id));
     }

@@ -24,18 +24,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     /** 判断手机号是否存在（排除已注销） */
     boolean existsByPhoneAndDeletedFalse(String phone);
-
-    // ==================== 兼容旧方法（不推荐使用）====================
-
-    /** @deprecated 用 findByUsernameAndDeletedFalse 代替 */
-    @Deprecated
-    Optional<User> findByUsername(String username);
-
-    /** @deprecated 用 findByPhoneAndDeletedFalse 代替 */
-    @Deprecated
-    Optional<User> findByPhone(String phone);
-
-    /** @deprecated 用 existsByUsernameAndDeletedFalse 代替 */
-    @Deprecated
-    boolean existsByUsername(String username);
 }

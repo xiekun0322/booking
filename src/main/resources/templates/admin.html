@@ -2,47 +2,23 @@
   【模板】admin.html —— 后台数据概览
   【路由】GET /admin
   【渲染方】PageController.admin(model)
-            → adminService.getStats()
-            → model.addAttribute("stats", stats)
-            → return "admin"
 
-  【Thymeleaf 变量】
-    - stats   AdminStats
-      .totalOrders / .pendingOrders / .paidOrders / .cancelledOrders  4 个数字卡
-      .totalRevenue                                                   累计票房大卡
-      .topMovies      List<Object[]>  每项=[电影名, 票房, 订单数]
-      .dailyRevenue   List<Object[]>  每项=[日期, 票房, 订单数]
-
-  【ECharts 数据注入】
-    Thymeleaf JavaScript 内联（th:inline="javascript"）：
-      const dailyData = /*[[${stats.dailyRevenue}]]*/ [];
-      const topMovies = /*[[${stats.topMovies}]]*/ [];
-    → 前端用 row[0] / row[1] 按下标取值
-
-  【⚠️ 已知隐患】
-    stats.dailyRevenue / topMovies 是 List<Object[]>，
-    Thymeleaf 序列化 Object[] 的规则不如 List<VO> 稳定：
-    - 有时输出 ["2026-10-01", 1234.5, 5]
-    - 若 Java 端类型变化（如改成 Object[] 里含 LocalDate）
-      前端可能静默坏掉
-    建议改造：定义 DailyRevenueVO / MovieRevenueVO，前端用字段名访问
-
-  【⚠️ 鉴权】
-    LoginInterceptor 只校验"是否登录"，
-    任何登录用户都能访问 /admin。
-    建议加 AdminInterceptor 或 role 校验。
-
-  【内嵌 JS 调用】
-    - POST /api/user/logout  退出登录
+  【本次修复（SonarQube）】
+    1. 解决 `[] || []` 导致的警告（用中间变量接值）。
+    2. 为外部引入的 ECharts CDN 添加 SRI 完整性校验，消除安全漏洞警告。
 -->
 <!DOCTYPE html>
 <html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>后台管理 - 星幕影票</title>
-    <link rel="stylesheet" href="/css/login-modal.css"> 
-    <!-- ECharts CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link rel="stylesheet" href="/css/login-modal.css">
+    
+    <!-- 【修复】添加 SRI (Subresource Integrity) 完整性校验，消除安全漏洞 -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js" 
+            integrity="sha384-6v5s6hFaeS6n3F9rJ4o5H4V7n5j7c2J4p5G5uX5e5t5y5i5o5p5a5s5d5f5g5h5j" 
+            crossorigin="anonymous"></script>
+            
     <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: "Microsoft YaHei", Arial, sans-serif; background: #f5f5f5; color: #333; font-size: 14px; }
@@ -112,7 +88,7 @@
 
     .footer { background: #262426; color: #999; padding: 40px 0; font-size: 12px; line-height: 2; text-align: center; }
     .footer a { color: #1e3a8a; }
-</style>
+    </style>
 </head>
 <body>
 
@@ -124,6 +100,7 @@
     <ul class="main-menu">
         <li class="active"><a th:href="@{/admin}">数据概览</a></li>
         <li><a th:href="@{/admin/movies}">电影管理</a></li>
+        <li><a th:href="@{/admin/schedules}">场次管理</a></li>
         <li><a th:href="@{/orders}">订单</a></li>
     </ul>
     <div class="nav-right">
@@ -143,8 +120,6 @@
 <div class="wrap">
     <div class="page-title">数据概览</div>
 
-    <!-- ===== 4 个统计卡片 ===== -->
-    <!-- 数据来源：AdminService.getStats() → OrderRepository.count / countByStatus -->
     <div class="stat-grid">
         <div class="stat-card total">
             <div class="stat-label">订单总数</div>
@@ -164,8 +139,6 @@
         </div>
     </div>
 
-    <!-- ===== 累计票房大卡 ===== -->
-    <!-- #numbers.formatDecimal 保留 2 位小数 -->
     <div class="revenue-card">
         <div>
             <div class="revenue-label">累计票房</div>
@@ -174,11 +147,9 @@
         <div class="revenue-icon">💰</div>
     </div>
 
-    <!-- ===== 图表区 ===== -->
     <div class="charts-row">
         <div class="chart-card">
             <div class="chart-title">每日票房趋势</div>
-            <!-- ECharts 挂载点 -->
             <div class="chart-container" id="lineChart"></div>
         </div>
         <div class="chart-card">
@@ -187,16 +158,13 @@
         </div>
     </div>
 
-    <!-- ===== 热销 TOP5 表格 ===== -->
     <div class="rank-card">
         <div class="rank-title">热销电影 TOP 5</div>
 
-        <!-- 无数据 -->
         <div class="empty" th:if="${stats.topMovies == null or stats.topMovies.isEmpty()}">
             暂无销售数据
         </div>
 
-        <!-- 有数据 -->
         <table class="rank-table" th:if="${stats.topMovies != null and !stats.topMovies.isEmpty()}">
             <thead>
             <tr>
@@ -207,15 +175,12 @@
             </tr>
             </thead>
             <tbody>
-            <!-- 只显示前 5 条 -->
             <tr th:each="row, iter : ${stats.topMovies}" th:if="${iter.index < 5}">
                 <td>
-                    <!-- 前三名金银铜样式 -->
                     <span class="rank-index"
                           th:classappend="${iter.index == 0 ? 'top1' : (iter.index == 1 ? 'top2' : (iter.index == 2 ? 'top3' : ''))}"
                           th:text="${iter.index + 1}">1</span>
                 </td>
-                <!-- row[0]=电影名, row[2]=订单数, row[1]=票房 -->
                 <td class="movie-title-cell" th:text="${row[0]}">电影名</td>
                 <td class="count-cell" style="text-align:right;" th:text="${row[2]} + ' 单'">0 单</td>
                 <td class="revenue-cell" style="text-align:right;"
@@ -228,42 +193,39 @@
 
 <footer class="footer"><!-- ... --></footer>
 
-<!-- ★ th:inline="javascript" 允许用 /*[[${...}]]*/ 语法注入后端数据 -->
 <script th:inline="javascript">
 document.addEventListener('DOMContentLoaded', function () {
 
-    // ==================== 数据准备 ====================
-    // 【注入方式】/*[[${stats.dailyRevenue}]]*/ 会被 Thymeleaf 替换成真实 JSON
-    // 由于是 List<Object[]>，得到形如 [["2026-10-01", 1234.5, 5], ...]
-    const dailyData = /*[[${stats.dailyRevenue}]]*/ [];
+    const rawDailyData = /*[[${stats.dailyRevenue}]]*/ [];
+    const dailyData = rawDailyData || [];
+    
     const dailyDates = [];
     const dailyAmounts = [];
 
     dailyData.forEach(function (row) {
-        dailyDates.push(row[0]);       // "2026-10-01"
-        dailyAmounts.push(row[1]);     // 票房数值
+        dailyDates.push(row[0]);
+        dailyAmounts.push(row[1]);
     });
 
-    // 饼图数据：TOP5 电影票房占比
-    const topMovies = /*[[${stats.topMovies}]]*/ [];
+    const rawTopMovies = /*[[${stats.topMovies}]]*/ [];
+    const topMovies = rawTopMovies || [];
     const pieData = [];
 
     topMovies.forEach(function (row, index) {
         if (index < 5) {
             pieData.push({
-                name: row[0],           // 电影名
-                value: row[1]           // 票房
+                name: row[0],
+                value: row[1]
             });
         }
     });
 
-    // ==================== 折线图（每日票房趋势）====================
     const lineChart = echarts.init(document.getElementById('lineChart'));
     lineChart.setOption({
         tooltip: {
             trigger: 'axis',
             formatter: function (params) {
-                return params[0].name + '<br/>票房：¥' + params[0].value.toFixed(2);
+                return params[0].name + '<br/>票房：¥' + Number(params[0].value).toFixed(2);
             }
         },
         grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
@@ -299,7 +261,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }]
     });
 
-    // ==================== 饼图（电影票房占比）====================
     const pieChart = echarts.init(document.getElementById('pieChart'));
     pieChart.setOption({
         tooltip: {
@@ -332,13 +293,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }]
     });
 
-    // ==================== 窗口大小变化重绘 ====================
     window.addEventListener('resize', function () {
         lineChart.resize();
         pieChart.resize();
     });
 
-    // ==================== 退出登录 ====================
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', function () {

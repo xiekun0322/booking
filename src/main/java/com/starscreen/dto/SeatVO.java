@@ -3,49 +3,29 @@ package com.starscreen.dto;
 import lombok.Data;
 
 /**
- * 【功能】座位展示对象（VO = View Object）。
- *         后端返回给选座页的座位数据结构，
- *         比 Seat 实体多了 label（"3排5座"）字段，方便前端直接用。
+ * 座位展示对象（VO），比 {@code Seat} 实体多了拼接好的 label。
  *
- * 【调用方】
- *          - SeatService.listBySchedule(scheduleId)
- *          - SeatController.listBySchedule(scheduleId)
+ * <p>设计动机：
+ * <ol>
+ *   <li>不暴露 {@code Seat.orderId}，防止前端窥探他人订单；</li>
+ *   <li>前端可直接使用 label，省去拼接；</li>
+ *   <li>未来实体加内部字段时 VO 结构稳定。</li>
+ * </ol>
  *
- * 【被调用】
- *          seat.html 前端 fetch('/api/seats/schedule/' + scheduleId) 后渲染：
- *          - rowNum/colNum 决定座位位置
- *          - status 决定颜色（available 白 / sold 红 / locked 灰）
- *          - label 用于点击后显示"3排5座"
- *
- * 【为什么不用 Seat 实体直接返回】
- *          1. 不暴露 orderId（防止前端窥探别人订单）
- *          2. 加 label 字段，省去前端拼接
- *          3. 未来若 Seat 实体加内部字段，VO 可保持稳定
- *
- * 【JSON 示例】
- *          {
- *            "id": 123,
- *            "rowNum": 3,
- *            "colNum": 5,
- *            "status": "available",
- *            "label": "3排5座"
- *          }
+ * <pre>
+ *   { "id":123, "rowNum":3, "colNum":5, "status":"available", "label":"3排5座" }
+ * </pre>
  */
 @Data
 public class SeatVO {
 
-    /** 座位 ID（Seat.id） */
-    private Long id;
-
-    /** 第几排 */
+    private Long    id;
     private Integer rowNum;
-
-    /** 第几座 */
     private Integer colNum;
 
-    /** 状态：available / locked / sold */
-    private String status;
+    /** available / locked / sold。 */
+    private String  status;
 
-    /** 座位标签，格式 "3排5座"（由 SeatService 拼接） */
-    private String label;
+    /** "3排5座"，由 SeatService 拼接。 */
+    private String  label;
 }

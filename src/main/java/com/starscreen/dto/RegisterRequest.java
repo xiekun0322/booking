@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+/** 账号密码注册请求。手机号可选，填写则须合法。 */
 @Data
 public class RegisterRequest {
 
@@ -16,11 +17,9 @@ public class RegisterRequest {
     @Size(min = 8, max = 20, message = "密码长度 8~20 位")
     @Pattern(
         regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*._-])[A-Za-z\\d!@#$%^&*._-]{8,20}$",
-        message = "密码必须包含大写字母、小写字母、数字和特殊字符，长度 8~20 位"
-    )
+        message = "密码必须包含大写字母、小写字母、数字和特殊字符，长度 8~20 位")
     private String password;
 
-    /** ★ 手机号（可选，但填了必须合法） */
     @Pattern(regexp = "^$|^1[3-9]\\d{9}$", message = "手机号格式不正确")
     private String phone;
 }

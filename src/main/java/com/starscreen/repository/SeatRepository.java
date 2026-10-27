@@ -78,4 +78,25 @@ public interface SeatRepository extends JpaRepository<Seat, Long> {
     @Query("UPDATE Seat s SET s.status = 'locked', s.orderId = :orderId " +
            "WHERE s.id = :id AND s.status = 'available'")
     int lockSeat(@Param("id") Long id, @Param("orderId") Long orderId);
+    
+    /**
+     * 【批量更新】支付成功：把该订单下所有 locked 的座位改成 sold
+     */
+    @Modifying
+    @Query("UPDATE Seat s SET s.status = 'sold' WHERE s.orderId = :orderId AND s.status = 'locked'")
+    int updateToSoldByOrderId(@Param("orderId") Long orderId);
+
+    /**
+     * 【批量更新】取消订单/超时：把该订单下所有 locked 的座位释放成 available，并清空 orderId
+     */
+    @Modifying
+    @Query("UPDATE Seat s SET s.status = 'available', s.orderId = null WHERE s.orderId = :orderId AND s.status = 'locked'")
+    int releaseSeatsByOrderId(@Param("orderId") Long orderId);
+    
+    /**
+     * 【批量删除】根据场次ID，直接删除该场次下的所有座位
+     */
+    @Modifying
+    @Query("DELETE FROM Seat s WHERE s.scheduleId = :scheduleId")
+    int deleteByScheduleId(@Param("scheduleId") Long scheduleId);
 }

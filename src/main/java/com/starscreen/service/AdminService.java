@@ -2,6 +2,9 @@ package com.starscreen.service;
 
 import com.starscreen.dto.AdminStats;
 import com.starscreen.repository.OrderRepository;
+
+import java.math.BigDecimal;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -51,7 +54,9 @@ public class AdminService {
         stats.setCancelledOrders(orderRepository.countByStatus("cancelled"));       // WHERE status='cancelled'
 
         // -------- 累计票房 --------
-        stats.setTotalRevenue(orderRepository.sumPaidTotalPrice());                 // SUM WHERE status='paid'
+        Double totalRevenue = orderRepository.sumPaidTotalPrice();
+        stats.setTotalRevenue(totalRevenue != null ? BigDecimal.valueOf(totalRevenue) : BigDecimal.ZERO);
+        // SUM WHERE status='paid'
 
         // -------- TOP 电影 + 每日趋势 --------
         stats.setTopMovies(orderRepository.topMoviesByRevenue());                   // GROUP BY movieTitle

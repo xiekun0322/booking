@@ -1,8 +1,15 @@
 package com.starscreen.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import lombok.Data;
 
+/** 场次实体，映射表 schedule。 */
 @Data
 @Entity
 @Table(name = "schedule")
@@ -15,11 +22,9 @@ public class Schedule {
     @Column(name = "movie_id")
     private Long movieId;
 
-    /** ★ 新增：影院 ID */
     @Column(name = "cinema_id")
     private Long cinemaId;
 
-    /** ★ 新增：影厅 ID */
     @Column(name = "hall_id")
     private Long hallId;
 
@@ -29,6 +34,7 @@ public class Schedule {
     @Column(name = "hall_name")
     private String hallName;
 
+    /** 格式 "HH:mm"，与 date 拼接解析为 LocalDateTime（见 OrderService）。 */
     @Column(name = "start_time")
     private String startTime;
 
@@ -39,6 +45,7 @@ public class Schedule {
 
     private Double price;
 
+    /** 格式 "yyyy-MM-dd"。 */
     @Column(length = 20)
     private String date;
 }
