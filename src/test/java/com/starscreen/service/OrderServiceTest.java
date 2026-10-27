@@ -97,13 +97,13 @@ class OrderServiceTest {
         Long testUserId = 999L;
 
         // 执行被测方法
-        Order order = orderService.createOrder(testUserId, schedule.getId(), List.of(seatLabel));
+        Order order = orderService.createOrder(testUserId, schedule.getId(), List.of(seatLabel), "test-captcha");
 
         // 断言订单
         assertNotNull(order.getId(), "订单应有 ID");
         assertEquals("pending", order.getStatus(), "新订单应为待支付");
         assertEquals(testUserId, order.getUserId(), "订单应绑定用户");
-        assertEquals(schedule.getPrice(), order.getTotalPrice(), 0.01, "总价应等于单价");
+        assertEquals(schedule.getPrice(), order.getTotalPrice().doubleValue(), 0.01, "总价应等于单价");
         assertEquals(seatLabel, order.getSeats(), "座位信息应一致");
 
         // ★ 清除一级缓存，强制从数据库读最新状态
@@ -129,11 +129,10 @@ class OrderServiceTest {
         Long testUserId = 999L;
 
         // 第一次下单成功
-        orderService.createOrder(testUserId, schedule.getId(), List.of(seatLabel));
-
+        orderService.createOrder(testUserId, schedule.getId(), List.of(seatLabel), "test-captcha");
         // 第二次下单同一座位 → 应抛异常
         BusinessException ex = assertThrows(BusinessException.class, () -> {
-            orderService.createOrder(testUserId, schedule.getId(), List.of(seatLabel));
+        	Order order = orderService.createOrder(testUserId, schedule.getId(), List.of(seatLabel), "test-captcha");
         });
         assertTrue(ex.getMessage().contains("已被选走"), "异常信息应提示座位已占");
     }
@@ -149,8 +148,12 @@ class OrderServiceTest {
         String seatLabel = findAvailableSeatLabel(schedule.getId());
         Long testUserId = 999L;
 
-        Order order = orderService.createOrder(testUserId, schedule.getId(), List.of(seatLabel));
-        Order paid = orderService.pay(testUserId, order.getId());
+        Order order = orderService.createOrder(testUserId, schedule.getId(), List.of(seatLabel), "test-captcha");
+        orderService.pay(testUserId, order.getId());
+        
+        // 核心步骤：清除 Hibernate 缓存，强制从数据库重新读取最新的订单数据
+        entityManager.clear(); 
+        Order paid = orderRepository.findById(order.getId()).orElseThrow(() -> new RuntimeException("订单未找到"));
 
         // 断言订单字段
         assertEquals("paid", paid.getStatus(), "支付后状态应为 paid");
@@ -180,7 +183,7 @@ class OrderServiceTest {
         String seatLabel = findAvailableSeatLabel(schedule.getId());
         Long testUserId = 999L;
 
-        Order order = orderService.createOrder(testUserId, schedule.getId(), List.of(seatLabel));
+        Order order = orderService.createOrder(testUserId, schedule.getId(), List.of(seatLabel), "test-captcha");
         orderService.pay(testUserId, order.getId());
 
         // 第二次支付 → 应抛异常
@@ -201,7 +204,7 @@ class OrderServiceTest {
         String seatLabel = findAvailableSeatLabel(schedule.getId());
         Long testUserId = 999L;
 
-        Order order = orderService.createOrder(testUserId, schedule.getId(), List.of(seatLabel));
+        Order order = orderService.createOrder(testUserId, schedule.getId(), List.of(seatLabel), "test-captcha");
         Order cancelled = orderService.cancel(testUserId, order.getId());
 
         assertEquals("cancelled", cancelled.getStatus(), "取消后状态应为 cancelled");
@@ -228,7 +231,7 @@ class OrderServiceTest {
         String seatLabel = findAvailableSeatLabel(schedule.getId());
 
         // 用户 100 下单
-        Order order = orderService.createOrder(100L, schedule.getId(), List.of(seatLabel));
+        Order order = orderService.createOrder(100L, schedule.getId(), List.of(seatLabel), "test-captcha");
 
         // 用户 200 尝试支付 → 应抛异常
         BusinessException ex = assertThrows(BusinessException.class, () -> {

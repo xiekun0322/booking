@@ -83,12 +83,12 @@ class SecurityAndOrderTest {
 
         try {
             // 假设正常登录 (如果你的数据库里没这个账号，可能会抛异常)
-            userController.login(loginReq, request);
+            userController.login(loginReq, request.getSession());
             
             // 登录成功后，Session ID 必须发生变化！
             String newSessionId = request.getSession().getId();
             assertNotEquals(oldSessionId, newSessionId, "安全测试失败：登录后 Session ID 未刷新！");
-            System.out.println("✅ Session 固定攻击防御测试通过！");
+            System.out.println("Session 固定攻击防御测试通过！");
         } catch (Exception e) {
             // 如果没有测试账号报错，直接跳过打印
             System.out.println("跳过登录测试，因为测试库没有对应账号。");

@@ -1,20 +1,17 @@
 package com.starscreen.service;
 
-import com.starscreen.common.BusinessException;
-import com.starscreen.common.RoleConstants;
-import com.starscreen.common.StatusConstants;
-import com.starscreen.config.RabbitMQConfig;
-import com.starscreen.entity.Movie;
-import com.starscreen.entity.Order;
-import com.starscreen.entity.Schedule;
-import com.starscreen.entity.Seat;
-import com.starscreen.repository.MovieRepository;
-import com.starscreen.repository.OrderRepository;
-import com.starscreen.repository.ScheduleRepository;
-import com.starscreen.repository.SeatRepository;
-import lombok.RequiredArgsConstructor;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,13 +20,19 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.starscreen.common.BusinessException;
+import com.starscreen.common.StatusConstants;
+import com.starscreen.entity.Movie;
+import com.starscreen.entity.Order;
+import com.starscreen.entity.Schedule;
+import com.starscreen.entity.Seat;
+import com.starscreen.repository.MovieRepository;
+import com.starscreen.repository.OrderRepository;
+import com.starscreen.repository.ScheduleRepository;
+import com.starscreen.repository.SeatRepository;
+import com.starscreen.util.SnowflakeIdWorker;
+
+import lombok.RequiredArgsConstructor;
 
 /**
  * 【功能】订单业务服务 —— 系统核心。
@@ -132,7 +135,8 @@ public class OrderService {
      *   - "座位格式错误：xxx" 标签不符合 ^\d+排\d+座$
      */
     @Transactional
-    public Order createOrder(Long userId, Long scheduleId, List<String> seatLabels) {
+//    public Order createOrder(Long userId, Long scheduleId, List<String> seatLabels) {
+    public Order createOrder(Long userId, Long scheduleId, List<String> seatLabels, String captchaTicket) {
         // -------- 步骤 1：参数校验 --------
     	validateOrderParams(userId, scheduleId, seatLabels, captchaTicket);
 
@@ -163,7 +167,8 @@ public class OrderService {
         order.setMovieTitle(movie != null ? movie.getTitle() : "未知电影");
         order.setCinemaName(schedule.getCinemaName());
         order.setHallName(schedule.getHallName());
-        order.setShowTime(schedule.getDate() + " " + schedule.getStartTime());
+        String dateTimeStr = schedule.getDate() + " " + schedule.getStartTime();
+        order.setShowTime(LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
         order.setSeats(String.join(",", seatLabels));
         // 1. 取出单价，把 Double 转成 BigDecimal（如果 schedule.getPrice() 已经是 BigDecimal，这行可以不写，直接赋值）
         // 1. 取出单价，如果为空默认 35.0
@@ -179,7 +184,7 @@ public class OrderService {
      	// 【修改后】
         order.setCreateTime(LocalDateTime.now());
         // 拼装 LocalDateTime：假设 schedule 的 date 是 "2026-10-25"，startTime 是 "14:30"
-        String dateTimeStr = schedule.getDate() + " " + schedule.getStartTime();
+        dateTimeStr = schedule.getDate() + " " + schedule.getStartTime();
         order.setShowTime(LocalDateTime.parse(dateTimeStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
 
         // -------- 步骤 5：保存订单 --------
@@ -226,7 +231,7 @@ public class OrderService {
      *              字符集排除了易混淆的 I/O/0/1。
      */
     @Transactional
-    public Order pay(Long userId, Long orderId) {
+    public String pay(Long userId, Long orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(MSG_ORDER_NOT_FOUND));
 
@@ -248,7 +253,7 @@ public class OrderService {
      * 支付回调（由第三方服务器调用）
      */
     @Transactional
-    public void handlePayCallback(Long orderId) {
+    public Order handlePayCallback(Long orderId) {
         // 【新增这一行】防止传入的 orderId 为 null，同时消除红波浪线
         if (orderId == null) {
             throw new BusinessException("订单ID不能为空");
@@ -265,7 +270,7 @@ public class OrderService {
 
         if (affected == 0) {
             log.warn("【支付回调】处理失败，订单已被处理过或已取消，orderId={}", orderId);
-            return;
+            return order;
         }
 
         order.setPayTime(now);
@@ -354,7 +359,7 @@ public class OrderService {
             // -------- 解析下单时间（容错）--------
             LocalDateTime created;
             try {
-                created = LocalDateTime.parse(order.getCreateTime(), DTF);
+            	created = order.getCreateTime();
             } catch (Exception e) {
                 log.warn("订单时间格式异常，跳过：orderId={}", order.getId());
                 continue;
