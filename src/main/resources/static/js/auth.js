@@ -1,8 +1,13 @@
 /**
  * 【功能】全局登录态 + 弹窗 + apiFetch 包装器。
  *
- * 【本次改动】
- *   updateNavUI 里，"后台管理"菜单只对 role=ADMIN 的用户显示。
+ * 【登录态三源对齐】页面里的登录态原本有三份来源：
+ *   1. HttpSession（服务端真源，/api/user/current 反映的就是它）
+ *   2. window.currentUser（本文件维护的客户端副本）
+ *   3. 服务端渲染进 HTML 的快照（如 seat.html 的"请先登录"、后台菜单）
+ *   本文件负责 2、3 与 1 保持一致：
+ *   - refreshCurrentUser() 每次刷新都同步 2 并重绘 3；
+ *   - onLoginSuccess() 在没有待重试请求时整页刷新，让 3 重新由服务端渲染。
  *
  * 【暴露】
  *   window.currentUser
@@ -11,6 +16,11 @@
  *   window.apiFetch(url, opts)
  *   window.doLogout()
  *   window.refreshCurrentUser()
+ *
+ * 【模板约定】需要跟随登录态显隐的区块加属性：
+ *   data-auth-guest       未登录时显示
+ *   data-auth-user        已登录时显示
+ *   data-auth-username    已登录时填入当前用户名
  */
 
 (function () {
@@ -25,14 +35,37 @@
             .then(res => {
                 window.currentUser = (res.code === 200) ? res.data : null;
                 updateNavUI();
+                applyAuthVisibility();
                 return window.currentUser;
             })
             .catch(() => {
                 window.currentUser = null;
                 updateNavUI();
+                applyAuthVisibility();
                 return null;
             });
     };
+
+    /**
+     * 让服务端渲染的登录态区块跟随客户端登录态。
+     * 会话过期后页面正文还写着"已登录：xxx"、或登录成功后正文仍是"请先登录"，
+     * 都是因为这块 HTML 只在页面加载时渲染一次。
+     */
+    function applyAuthVisibility() {
+        const logged = !!window.currentUser;
+
+        document.querySelectorAll('[data-auth-guest]').forEach(el => {
+            el.style.display = logged ? 'none' : '';
+        });
+
+        document.querySelectorAll('[data-auth-user]').forEach(el => {
+            el.style.display = logged ? '' : 'none';
+            if (!logged) return;
+            el.querySelectorAll('[data-auth-username]').forEach(nameEl => {
+                nameEl.textContent = window.currentUser.username || '';
+            });
+        });
+    }
 
     // ==================== 顶部导航 ====================
     function updateNavUI() {
@@ -75,6 +108,8 @@
 
     // ==================== 登录模态框 ====================
     let afterLoginCallback = null;
+    /** 是否已有一个登录框在等用户操作，用于阻止并发 401 反复弹窗/反复排队。 */
+    let loginPending = false;
 
     window.openLoginModal = function (callback) {
         afterLoginCallback = callback || null;
@@ -95,34 +130,83 @@
         const modal = document.getElementById('globalLoginModal');
         if (modal) modal.classList.remove('show');
         afterLoginCallback = null;
+        loginPending = false;
     };
 
     function onLoginSuccess(user) {
         window.currentUser = user;
         updateNavUI();
+        applyAuthVisibility();
+        loginPending = false;
         const modal = document.getElementById('globalLoginModal');
         if (modal) modal.classList.remove('show');
+
+        // 有等待中的请求（如被 401 拦下的下单）→ 先让它重试一次，由调用方决定后续跳转
         if (typeof afterLoginCallback === 'function') {
             const cb = afterLoginCallback;
             afterLoginCallback = null;
-            setTimeout(cb, 50);
+            cb();
+            return;
         }
+
+        // 没有待重试请求 → 整页刷新，让服务端按新会话重新渲染页面快照
+        //（与 /login 独立页登录后跳转的行为保持一致）
+        window.location.reload();
+    }
+
+    // ==================== 防重放头 ====================
+    function newNonce() {
+        if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+            return window.crypto.randomUUID();
+        }
+        return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+    }
+
+    /** 补齐 X-Timestamp / X-Nonce，已有则保留调用方自己的值。 */
+    function withAntiReplayHeaders(headers) {
+        const merged = Object.assign({}, headers || {});
+        const has = name => Object.keys(merged).some(k => k.toLowerCase() === name);
+        if (!has('x-timestamp')) merged['X-Timestamp'] = String(Date.now());
+        if (!has('x-nonce')) merged['X-Nonce'] = newNonce();
+        return merged;
     }
 
     // ==================== apiFetch ====================
     window.apiFetch = function (url, options) {
         options = options || {};
         options.credentials = 'same-origin';
+
+        // 写操作补防重放头：/api/orders/** 的 POST/PUT/DELETE 由 AntiReplayInterceptor 校验，
+        // 网页端此前不带这两个头，直接被 400 拒（外部客户端带了 → 出现"接口能下单、网页不能"）。
+        const method = (options.method || 'GET').toUpperCase();
+        if (method !== 'GET' && method !== 'HEAD') {
+            options.headers = withAntiReplayHeaders(options.headers);
+        }
+
         return fetch(url, options).then(res => {
-            if (res.status === 401) {
+            if (res.status !== 401) return res;
+
+            // 401 也可能只是页面快照过期：先向服务端确认一次，
+            // 确认仍未登录才弹登录框，避免"明明已登录还弹登录框"。
+            return window.refreshCurrentUser().then(user => {
+                if (user) {
+                    // 会话有效，原样重试一次（用原生 fetch，不递归 apiFetch，不会无限重试）
+                    return fetch(url, options);
+                }
                 return new Promise((resolve, reject) => {
+                    if (loginPending) {
+                        reject({ __needLogin: true, message: '未登录' });
+                        return;
+                    }
+                    loginPending = true;
                     window.openLoginModal(function () {
+                        loginPending = false;
+                        // 登录成功后只重试一次，失败就交给调用方提示，不再触发第二轮弹窗
                         fetch(url, options).then(resolve).catch(reject);
                     });
                     reject({ __needLogin: true, message: '未登录' });
                 });
-            }
-            return res;
+            });
         });
     };
 
@@ -226,10 +310,16 @@
             .then(r => r.json())
             .then(res => {
                 if (res.code !== 200) throw new Error(res.message);
+
+                // 接口契约：演示环境 data=6 位验证码（自动填入）；生产环境 data=null（只剩短信）
                 const code = res.data;
-                alert('【演示环境】\n您的验证码是：' + code + '\n\n已自动填入。');
-                smsCode.value = code;
-                checkSms();
+                if (code && /^\d{6}$/.test(String(code))) {
+                    smsCode.value = code;
+                    checkSms();
+                    showMsg('【演示环境】验证码已自动填入', 'success');
+                } else {
+                    showMsg('验证码已发送，请查收短信', 'success');
+                }
 
                 countdown = 60;
                 checkSend();

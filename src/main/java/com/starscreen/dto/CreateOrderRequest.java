@@ -17,8 +17,8 @@ import lombok.Data;
  * <p>座位标签格式由 {@code OrderService.parseSeatLabel} 用正则
  * {@code ^(\d{1,2})排(\d{1,2})座$} 解析，与前端 seat.html 生成格式一致。
  *
- * <p><b>NOTE</b>：{@link #captchaTicket} 无校验注解，由 Service 手工判空，
- * 且未真正校验票据有效性（当前任意非空字符串即可通过）。
+ * <p><b>NOTE</b>：{@link #captchaTicket} 目前为<b>可选</b>——仓库尚无签发人机校验票据的端点，
+ * 网页端拿不到票据，Service 不做必填校验；接入真实人机校验后再改为必填并核销。
  */
 @Data
 public class CreateOrderRequest {

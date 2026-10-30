@@ -234,29 +234,69 @@ sequenceDiagram
 
 ## 📦 快速开始
 
-### 1. 环境要求
+### 方式一：Docker 一键启动（推荐，含 MySQL / Redis / RabbitMQ）
+
+只需要 Docker，不需要在宿主机装 JDK、Maven、MySQL、Redis、RabbitMQ：
+
+```bash
+cp .env.example .env          # 修改里面的 4 个 CHANGE_ME_* 密码
+docker compose up -d --build  # 起 mysql → redis → rabbitmq → app，健康后逐级放行
+docker compose ps             # 四个服务都 healthy 后访问 http://localhost:8080/
+```
+
+首次启动会自动完成建表（10 张表）、灌入演示数据、创建**只有 DML 权限**的应用账号。
+组件职责、依赖关系、启动顺序、端口约定与排障见 **[DOCKER.md](DOCKER.md)**。
+
+### 方式二：本地裸机运行
+
+#### 1. 环境要求
 
 - JDK 21+
 - Maven 3.8+
 - MySQL 8.0+
+- Redis 7+（短信验证码登录、发送限流）
+- RabbitMQ 3.13+（未支付订单 10 分钟自动取消）
 
-### 2. 建数据库
+> 只跑浏览、选座、下单、支付可不装 Redis / RabbitMQ，但**手机验证码登录**会报错，
+> 且未支付订单不会被自动取消（座位一直占用）。两者缺失都不会阻止应用启动，属于隐性故障。
 
-```sql
-CREATE DATABASE movie_ticketing DEFAULT CHARACTER SET utf8mb4;
+#### 2. 初始化数据库
+
+表结构由 `src/main/resources/schema.sql` **唯一负责**，应用启动时不会自动建表
+（`spring.jpa.hibernate.ddl-auto=none`、`spring.sql.init.mode=never`）。
+原因是运行账号只有 DML 权限，DDL 统一交给 DBA / root 执行。
+
+```bash
+# ① 建库 + 建应用账号（只授予 SELECT/INSERT/UPDATE/DELETE）
+#    执行前先把脚本里的 CHANGE_ME_STRONG_PASSWORD 改成你自己的密码
+mysql -u root -p --default-character-set=utf8mb4 < scripts/init-db.sql
+
+# ② 建表（幂等，可重复执行）
+mysql -u root -p --default-character-set=utf8mb4 starscreen < src/main/resources/schema.sql
+
+# ③ 灌入演示数据（幂等，可重复执行）
+mysql -u root -p --default-character-set=utf8mb4 starscreen < src/main/resources/data.sql
 ```
 
-### 3. 修改配置
+> **Windows 用户注意**：必须带 `--default-character-set=utf8mb4`。
+> 控制台默认 gbk，直接 `mysql < xxx.sql` 会把中文按 gbk 解码，报
+> `ERROR 1406 Data too long for column 'district'`。
 
-编辑 `src/main/resources/application.properties`：
+> **存量库升级**（已经跑过旧版本、表已存在）：不要用 schema.sql 重建，
+> 执行 `scripts/migrate-v1-to-v2.sql` 做增量对齐，然后跑 `scripts/verify-schema.sql` 复核。
 
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/movie_ticketing?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
-spring.datasource.username=root
-spring.datasource.password=你的密码
+#### 3. 配置数据库密码
+
+密码不进配置文件，通过环境变量注入（`application.properties` 里是 `${DB_PASSWORD:默认值}`）：
+
+```bash
+# Windows（新开终端生效）
+setx DB_PASSWORD "你的密码"
+# Linux / macOS
+export DB_PASSWORD="你的密码"
 ```
 
-### 4. 启动
+#### 4. 启动
 
 ```bash
 mvn spring-boot:run
@@ -269,20 +309,31 @@ mvn clean package
 java -jar target/starscreen-ticketing-1.0.0.jar
 ```
 
-### 5. 访问
+#### 5. 访问
 
 浏览器打开 `http://localhost:8080/`
 
-首次启动会自动建表 + 初始化 16 部电影、24 家影院、场次、座位数据。
+#### 6. 测试账号
 
-### 6. 测试账号
+| 用户名 | 密码 | 角色 | 说明 |
+|---|---|---|---|
+| admin | 123456 | ADMIN | 可进入 `/admin` 后台 |
+| testuser | 123456 | USER | 普通购票用户 |
 
-| 用户名 | 密码 | 角色 |
-|---|---|---|
-| alice | 123456 | USER |
-| bob | 123456 | USER |
+**或使用手机号验证码登录**：任意合法手机号，点"发送验证码"。
+验证码只写服务端日志（`SmsService` 的模拟发送），可在 `docker logs starscreen-app | grep 验证码` 或
+`docker exec starscreen-redis redis-cli -a "$REDIS_PASSWORD" --no-auth-warning get sms:code:手机号` 取到。
+需要"点一下就自动填入"的演示效果时，用 `APP_SMS_RETURN_CODE=true` 启动应用
+（对应 `app.sms.return-code`，默认 false：接口不回传验证码，这是 `SecurityAndOrderTest` 守住的安全基线）。
 
-**或使用手机号验证码登录**：任意合法手机号，点击"发送验证码"，演示环境会弹窗显示验证码并自动填入。
+#### 7. 结构自检（建议每次换库后执行）
+
+```bash
+mysql -u starscreen_app -p --default-character-set=utf8mb4 starscreen < scripts/verify-schema.sql
+```
+
+输出中 `result` 列必须全部为 `PASS`。任一项 `FAIL` 说明库结构与 `schema.sql` 不一致，
+典型后果是启动后报 `Table 'xxx' doesn't exist`（1146）或 `Unknown column`（1054）。
 
 ## 📁 项目结构
 
@@ -293,7 +344,6 @@ src/main/java/com/starscreen/
 │   ├── BusinessException       业务异常
 │   └── GlobalExceptionHandler  全局异常处理
 ├── config/                     配置
-│   ├── DataInitializer         数据初始化
 │   ├── CorsConfig              CORS 白名单
 │   ├── SecurityHeadersConfig   安全响应头过滤器
 │   ├── LoginInterceptor        登录拦截器
@@ -356,6 +406,19 @@ src/main/java/com/starscreen/
     ├── SmsService
     ├── SidebarService
     └── AdminService
+```
+
+数据库脚本与 DDL：
+
+```
+src/main/resources/
+├── schema.sql                  表结构（唯一权威来源，幂等）
+└── data.sql                    演示数据（幂等，座位按影厅自动展开）
+
+scripts/                        数据库运维脚本
+├── init-db.sql                 建库 + 应用账号 + 最小权限授权（root 执行）
+├── migrate-v1-to-v2.sql        存量库结构对齐（幂等，只依赖 ALTER/INDEX）
+└── verify-schema.sql           结构与数据一致性自检（只读）
 ```
 
 ## 🔐 安全性

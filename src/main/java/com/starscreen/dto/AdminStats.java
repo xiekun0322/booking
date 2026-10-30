@@ -3,6 +3,8 @@ package com.starscreen.dto;
 import java.math.BigDecimal;
 import java.util.List;
 
+import com.starscreen.repository.DailyRevenueProjection;
+
 import lombok.Data;
 
 /**
@@ -27,5 +29,5 @@ public class AdminStats {
     private List<Object[]> topMovies;
 
     /** 每项 = [日期, 票房, 订单数]，按日期升序。 */
-    private List<Object[]> dailyRevenue;
+    private List<DailyRevenueProjection> dailyRevenue;
 }

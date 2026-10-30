@@ -54,14 +54,14 @@ class SecurityAndOrderTest {
         SendSmsRequest req = new SendSmsRequest();
         req.setPhone("13800138000");
 
-        // 2. 接收返回结果（改用 Result<Void>）
-        Result<Void> result = userController.sendSms(req);
+        // 2. 接收返回结果（data 类型随 send-sms 契约放宽为可空 String，断言不变）
+        Result<String> result = userController.sendSms(req);
 
         // 3. 核心断言（极其干脆！）
         // 断言 A：状态码必须是成功
         assertEquals(200, result.getCode());
         
-        // 断言 B：既然改成了 Void，那 data 必须为空！
+        // 断言 B：默认配置（app.sms.return-code=false）下 data 必须为空！
         assertNull(result.getData(), "安全漏洞：发短信接口依然在向前端返回数据！");
         
         System.out.println("测试通过：验证码已安全脱敏，前端无法直接获取。");
@@ -83,7 +83,8 @@ class SecurityAndOrderTest {
 
         try {
             // 假设正常登录 (如果你的数据库里没这个账号，可能会抛异常)
-            userController.login(loginReq, request.getSession());
+            // writeSession 内部会用 HttpServletRequest#changeSessionId() 换发 ID，所以要传 request
+            userController.login(loginReq, request);
             
             // 登录成功后，Session ID 必须发生变化！
             String newSessionId = request.getSession().getId();

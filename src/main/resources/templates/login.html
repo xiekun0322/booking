@@ -187,10 +187,15 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(r => r.json())
         .then(result => {
             if (result.code !== 200) throw new Error(result.message);
-            const code = result.data;
-            alert('【演示环境】\n您的验证码是：' + code + '\n\n已自动填入。');
-            smsCode.value = code;
-            checkSmsLoginBtn();
+
+            // 接口契约：演示环境 data=6 位验证码（自动填入）；生产环境 data=null（只剩短信）
+            if (result.data && /^\d{6}$/.test(String(result.data))) {
+                smsCode.value = result.data;
+                checkSmsLoginBtn();
+                showMsg('验证码已自动填入（演示环境）', 'success');
+            } else {
+                showMsg('验证码已发送，请查收短信', 'success');
+            }
 
             countdown = 60;
             checkSendBtn();

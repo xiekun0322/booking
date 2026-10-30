@@ -126,11 +126,15 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
      * 【⚠️ 注意】用字符串前 10 位当日期，是演示环境的简化写法。
      *            正确做法：payTime 改用 LocalDateTime 类型。
      */
-    @Query("SELECT SUBSTRING(o.payTime, 1, 10), SUM(o.totalPrice), COUNT(o) " +
-           "FROM Order o WHERE o.status = 'paid' AND o.payTime IS NOT NULL " +
-           "GROUP BY SUBSTRING(o.payTime, 1, 10) " +
-           "ORDER BY SUBSTRING(o.payTime, 1, 10) ASC")
-    List<Object[]> dailyRevenue();
+    /**
+     * 【功能】按天统计票房趋势。
+     * 【原生 SQL】使用 MySQL 的 DATE() 函数截取日期
+     */
+    @Query(value = "SELECT DATE(o.create_time) AS day, " +
+            "SUM(o.total_price) AS totalRevenue, COUNT(*) AS orderCount " +
+            "FROM t_order o WHERE o.status = 'paid' " +
+            "GROUP BY DATE(o.create_time) ORDER BY day ASC", nativeQuery = true)
+    List<DailyRevenueProjection> dailyRevenue();
     
     // 进阶版 SQL：加上时间判断  
     @Modifying

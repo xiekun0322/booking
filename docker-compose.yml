@@ -1,21 +1,222 @@
-# 放在服务器的 /opt/starscreen/ 目录下
-version: '3.8'
+# =============================================================================
+# 星幕影票 —— 全家桶编排（MySQL + Redis + RabbitMQ + 应用）
+# =============================================================================
+# 一键启动：
+#     cp .env.example .env      # 改掉里面的密码
+#     docker compose up -d --build
+#     docker compose ps         # 四个服务应依次变为 healthy
+#     浏览器打开 http://localhost:8080/
+#
+# 关停：
+#     docker compose down       # 保留数据卷
+#     docker compose down -v    # 连数据一起删（下次启动重新建表+灌种子数据）
+#
+# 【端口说明】容器之间走服务名 + 容器内端口（mysql:3306 / redis:6379 / rabbitmq:5672），
+#            与宿主机端口无关。宿主机端口只是为了本机调试，默认避开 3306/5672/15672，
+#            因为开发机上常常已经装了本地 MySQL 和 RabbitMQ。改端口只需要改 .env。
+# =============================================================================
+
+name: starscreen
+
+# ---------------------------------------------------------------------------
+# 复用片段：日志轮转，避免长跑把磁盘写满（默认 json-file 不轮转）
+# ---------------------------------------------------------------------------
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-restart: &default-restart
+  restart: unless-stopped
+
 services:
+  # =========================================================================
+  # 1. MySQL —— 唯一的持久化数据源
+  # =========================================================================
   mysql:
     image: mysql:8.0
+    container_name: starscreen-mysql
+    <<: *default-restart
+    command:
+      # 字符集在服务端就定死 utf8mb4，避免 emoji / 生僻字入库变问号
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+      # 与应用、JVM 统一东八区，否则场次时间会整体偏移 8 小时
+      - --default-time-zone=+08:00
+      - --max-connections=200
+      # 容器内存有限，显式压住 buffer pool，避免和宿主抢内存
+      - --innodb-buffer-pool-size=256M
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: movie_ticketing
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?请在 .env 中设置 MYSQL_ROOT_PASSWORD}
+      # 只用来建库；账号不交给镜像的 MYSQL_USER 机制（那会授予库内全部权限，含 DDL）
+      MYSQL_DATABASE: ${DB_NAME:-starscreen}
+      # 供 03-app-user.sh 创建「仅 DML」的应用账号
+      APP_DB_USER: ${DB_USERNAME:-starscreen_app}
+      APP_DB_PASSWORD: ${DB_PASSWORD:?请在 .env 中设置 DB_PASSWORD}
+      TZ: Asia/Shanghai
     ports:
-      - "3306:3306"
+      - "${MYSQL_HOST_PORT:-3307}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      # 仅在数据目录为空（首次启动）时按文件名字典序执行：
+      #   01 建表 → 02 灌种子数据 → 03 建应用账号并只授 DML
+      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./src/main/resources/data.sql:/docker-entrypoint-initdb.d/02-data.sql:ro
+      - ./docker/mysql/03-app-user.sh:/docker-entrypoint-initdb.d/03-app-user.sh:ro
+    healthcheck:
+      # 双重判定：进程活着（ping）+ 表真的建好了（movie 表存在）。
+      # 只看 ping 会在初始化脚本还没跑完时误报健康，导致应用抢跑报 1146。
+      test:
+        - CMD-SHELL
+        - >
+          mysqladmin ping -h 127.0.0.1 -uroot -p"$$MYSQL_ROOT_PASSWORD" --silent
+          && mysql -h 127.0.0.1 -uroot -p"$$MYSQL_ROOT_PASSWORD" -Nse
+          "SELECT 1 FROM information_schema.tables
+           WHERE table_schema='$${MYSQL_DATABASE}' AND table_name='movie'"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    networks:
+      - starscreen-net
+    logging: *default-logging
+
+  # =========================================================================
+  # 2. Redis —— 短信验证码、限流计数、防重放 nonce
+  # =========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: starscreen-redis
+    <<: *default-restart
+    command:
+      - redis-server
+      # AOF 持久化：容器重启后未过期的验证码/限流键不会凭空消失
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
+      - --requirepass
+      - ${REDIS_PASSWORD:?请在 .env 中设置 REDIS_PASSWORD}
+      # 验证码是短 TTL 数据，内存吃满时优先淘汰旧键，而不是写入失败
+      - --maxmemory
+      - 256mb
+      - --maxmemory-policy
+      - allkeys-lru
+    environment:
+      TZ: Asia/Shanghai
+      # 健康检查里的 redis-cli -a 需要这个变量；不注入会以空密码 AUTH → WRONGPASS
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?请在 .env 中设置 REDIS_PASSWORD}
+    ports:
+      - "${REDIS_HOST_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    networks:
+      - starscreen-net
+    logging: *default-logging
+
+  # =========================================================================
+  # 3. RabbitMQ —— 订单 10 分钟未支付自动取消（TTL + 死信队列）
+  # =========================================================================
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: starscreen-rabbitmq
+    <<: *default-restart
+    hostname: starscreen-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-starscreen}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?请在 .env 中设置 RABBITMQ_PASSWORD}
+      TZ: Asia/Shanghai
+    ports:
+      # 5672 是 AMQP 协议口，15672 是管理台
+      - "${RABBITMQ_HOST_PORT:-5673}:5672"
+      - "${RABBITMQ_MGMT_HOST_PORT:-15673}:15672"
+    volumes:
+      # 队列/交换机定义持久化：容器重启后 order.queue 不会消失，
+      # 否则队列里的延迟消息会一起丢失，超时订单就永远取消不掉了
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    networks:
+      - starscreen-net
+    logging: *default-logging
+
+  # =========================================================================
+  # 4. 应用 —— Spring Boot，唯一对外暴露业务端口的服务
+  # =========================================================================
   app:
-    image: your-dockerhub-username/starscreen-ticketing:latest
+    build:
+      context: .
+      # 默认走多阶段构建（容器内编译）。拉不到 maven 构建镜像时，
+      # 在 .env 里改成 Dockerfile.prebuilt，复用宿主机已打好的 jar。
+      dockerfile: ${APP_DOCKERFILE:-Dockerfile}
+    image: starscreen-ticketing:1.0.0
+    container_name: starscreen-app
+    <<: *default-restart
+    # 让 JVM 成为 PID 1 的子进程，docker stop 的 SIGTERM 才能走到优雅停机
+    init: true
     ports:
-      - "8080:8080"
-    depends_on:
-      - mysql
+      - "${APP_HOST_PORT:-8080}:8080"
     environment:
-      # 注入你的数据库配置，覆盖 application.properties 里的配置
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/movie_ticketing?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root_password
+      TZ: Asia/Shanghai
+      JAVA_OPTS: ${JAVA_OPTS:--XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai}
+      # ---- 数据库：主机名用服务名 mysql，端口用容器内 3306 ----
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${DB_NAME:-starscreen}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-starscreen_app}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:?请在 .env 中设置 DB_PASSWORD}
+      # ---- Redis ----
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      SPRING_DATA_REDIS_PASSWORD: ${REDIS_PASSWORD}
+      # ---- RabbitMQ ----
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: "5672"
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-starscreen}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+    depends_on:
+      # 三个依赖全部「健康」后才启动，而不是容器「已创建」就启动。
+      # 这是编排层的第一道顺序保证，应用侧的重连退避是第二道兜底。
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8080/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 60s
+    # 给 Spring 优雅停机留出时间：先停止接新请求，再把进行中的下单事务收尾
+    stop_grace_period: 30s
+    networks:
+      - starscreen-net
+    logging: *default-logging
+
+# ---------------------------------------------------------------------------
+# 网络：单条自定义 bridge，四个服务通过服务名做 DNS 解析。
+# 不用默认网络，是为了拿到内建 DNS + 与宿主其他容器隔离。
+# ---------------------------------------------------------------------------
+networks:
+  starscreen-net:
+    name: starscreen-net
+    driver: bridge
+
+volumes:
+  mysql-data:
+    name: starscreen-mysql-data
+  redis-data:
+    name: starscreen-redis-data
+  rabbitmq-data:
+    name: starscreen-rabbitmq-data

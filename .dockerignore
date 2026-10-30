@@ -1,0 +1,27 @@
+# 构建上下文瘦身：多阶段构建只需要 pom.xml 与 src/
+# target/ 整体排除，但保留 jar —— Dockerfile.prebuilt 要复用它
+target/*
+!target/starscreen-ticketing-*.jar
+.git/
+.github/
+.settings/
+.scannerwork/
+测试报告/
+.idea/
+*.iml
+.vscode/
+bin/
+build/
+
+# 本地/环境相关文件，绝不能进镜像
+.env
+.env.*
+*.log
+logs/
+
+# 文档与脚本不参与镜像构建
+*.md
+scripts/
+Dockerfile
+docker-compose*.yml
+.dockerignore

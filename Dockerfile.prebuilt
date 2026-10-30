@@ -1,0 +1,40 @@
+# =============================================================================
+# 星幕影票 —— 应用镜像（离线 / 预构建 jar 路径）
+# =============================================================================
+# 与 Dockerfile 的运行时阶段完全一致，区别只在于：
+#   不依赖 maven 构建镜像，直接复用宿主机 / CI 已经打好的 target/*.jar。
+#
+# 适用场景：
+#   1. 镜像仓库不可达，拉不到 maven:3.9-eclipse-temurin-21；
+#   2. 内网 / 离线构建，构建机上已统一产出 jar；
+#   3. 想让「编译」和「打包镜像」两步分开（CI 里 jar 已作为制品上传）。
+#
+# 用法：
+#     mvn -o clean package -DskipTests        # 宿主机先产出 jar
+#     docker build -f Dockerfile.prebuilt -t starscreen-ticketing:1.0.0 .
+#
+# 或在 .env 里设置 APP_DOCKERFILE=Dockerfile.prebuilt，然后
+#     docker compose up -d --build
+# =============================================================================
+FROM eclipse-temurin:21-jre
+
+RUN test -f /usr/share/zoneinfo/Asia/Shanghai \
+    && groupadd --system --gid 1001 app \
+    && useradd --system --uid 1001 --gid app --home-dir /app --shell /usr/sbin/nologin app
+
+WORKDIR /app
+
+# 只接受唯一产物；若 target/ 下存在多个 jar，构建会直接失败而不是猜一个
+COPY --chown=app:app target/starscreen-ticketing-1.0.0.jar /app/app.jar
+
+USER app
+
+ENV TZ=Asia/Shanghai \
+    JAVA_OPTS="-XX:MaxRAMPercentage=75.0 -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError -Dfile.encoding=UTF-8 -Duser.timezone=Asia/Shanghai"
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \
+    CMD wget -q -O /dev/null http://127.0.0.1:8080/ || exit 1
+
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar"]

@@ -14,7 +14,8 @@ import com.starscreen.common.BusinessException;
 /**
  * 【功能】模拟短信验证码服务。
  *
- * 【演示环境】验证码打印到 Console，同时通过 Result.data 返回给前端。
+ * 【演示环境】验证码打印到 Console；是否额外通过 Result.data 回传给前端，
+ *             由 {@code app.sms.return-code} 开关决定，见 UserController#sendSms。
  * 【生产环境】应接入阿里云/腾讯云短信，且【不返回】验证码。
  */
 @Service
@@ -24,15 +25,16 @@ public class SmsService {
 
     private static final SecureRandom secureRandom = new SecureRandom();
     
-    /**
-     * 【功能】发送验证码（模拟）。
-     * 【返回值】★ 验证码明文（演示环境用，生产环境应返回 void）
-     */
     @Autowired
     private StringRedisTemplate redisTemplate;
 
-    public void sendCode(String phone) {
-        // 🚨 防刷机制：同一个手机号，1 分钟内只能发 1 次
+    /**
+     * 【功能】发送验证码（模拟）。
+     * 【返回值】本次生成的 6 位验证码明文。调用方决定是否回传给前端
+     *          （演示环境回传、生产环境只写日志），避免"生成了却取不到"。
+     */
+    public String sendCode(String phone) {
+        // 防刷机制：同一个手机号，1 分钟内只能发 1 次
         String limitKey = "sms:limit:" + phone;
         Boolean isAllowed = redisTemplate.opsForValue().setIfAbsent(limitKey, "1", 1, TimeUnit.MINUTES);
         
@@ -47,7 +49,9 @@ public class SmsService {
         redisTemplate.opsForValue().set("sms:code:" + phone, code, 5, TimeUnit.MINUTES);
 
         // 这里调用真正的第三方短信网关（目前用控制台打印模拟）
-        log.debug("[模拟发送短信] 给 {} 发送验证码: {}", phone, code);
+        log.info("[模拟发送短信] 给 {} 发送验证码: {}", phone, code);
+
+        return code;
     }
 
     /**

@@ -5,7 +5,9 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -128,6 +130,7 @@ public class OrderService {
      *   - "场次 ID 不能为空"   scheduleId 为空
      *   - "请至少选择一个座位"  seats 为空
      *   - "一次最多选择 6 个座位"
+     *   - "座位数据异常：请勿重复提交相同座位" 同一座位在本次请求里出现多次（参数校验阶段拦截）
      *   - "场次不存在"
      *   - "座位不存在：xxx"   座位标签格式对但数据库没这个座位
      *   - "座位已被选走：xxx" 座位状态不是 available（预检）
@@ -458,15 +461,36 @@ public class OrderService {
         return "MO" + snowflake.nextId();
     }
 
+    /**
+     * 【功能】下单参数预校验。
+     *
+     * <p>captchaTicket（人机校验票据）当前<b>不强制</b>：仓库里还没有签发票据的端点，
+     * 网页端根本拿不到票据，强制只会让网页下单 100% 失败（API 客户端随便填个串反而能过），
+     * 这本身就是一种"入口不一致"。
+     *
+     * <p>接入真实人机校验后（签发 ticket → 服务端核销 → 一次性消费），
+     * 把下面的判空改回必填即可，前端同时提交 ticket 字段。
+     */
     private void validateOrderParams(Long userId, Long scheduleId, List<String> seatLabels, String captchaTicket) {
         if (userId == null) throw new BusinessException("请先登录");
         if (scheduleId == null) throw new BusinessException("场次 ID 不能为空");
         if (seatLabels == null || seatLabels.isEmpty()) throw new BusinessException("请至少选择一个座位");
         if (seatLabels.size() > 6) throw new BusinessException("一次最多选择 6 个座位");
-        
-        // 新增：校验验证码票据是否为空
-        if (captchaTicket == null || captchaTicket.trim().isEmpty()) {
-            throw new BusinessException("验证码已失效，请重新获取");
+
+        // 去重校验：同一座位在一次请求里重复出现 → 直接拒绝。
+        // 为什么必须在参数校验阶段做：
+        //   1) 步骤 3 的预检只查不锁，同一个座位查两次都会是 available，重复项会一路带到步骤 6；
+        //   2) 步骤 6 第 2 次 lockSeat 必然影响 0 行（订单已把该座位 locked），于是报成
+        //      "座位已被选走"，把"自己重复提交"误报成"被别人抢走"，误导用户和排查方向；
+        //   3) 金额按 seatLabels.size() 计算，重复项会让总价虚高，还会多占一个座位名额。
+        // 归一化方式与 parseSeatLabel 一致（trim），"3排5座" 与 " 3排5座 " 视为同一座位，
+        // 避免用空白绕过；其它内部空白变体本就过不了 ^\d+排\d+座$，不构成绕过面。
+        Set<String> distinctLabels = new HashSet<>();
+        for (String label : seatLabels) {
+            String normalized = label == null ? "" : label.trim();
+            if (!distinctLabels.add(normalized)) {
+                throw new BusinessException("座位数据异常：请勿重复提交相同座位");
+            }
         }
     }
 }

@@ -212,12 +212,14 @@
         <div class="total-price">总价：<span class="price" id="totalPrice">0</span></div>
 
         <div class="phone-info">
-            <span th:if="${session.userId == null}">
+            <!-- 两个分支都渲染：初始显隐由服务端 session 决定，登录/掉线后由 auth.js 的
+                 applyAuthVisibility() 接管，避免"导航已登录、正文还写着请先登录" -->
+            <span data-auth-guest th:style="${session.userId != null} ? 'display:none' : ''">
                 <a href="javascript:void(0)" onclick="openLoginModal()"
                    style="color:#1e3a8a;">请先登录</a>
             </span>
-            <span th:if="${session.userId != null}">
-                已登录：<span th:text="${session.username}">用户</span>
+            <span data-auth-user th:style="${session.userId == null} ? 'display:none' : ''">
+                已登录：<span data-auth-username th:text="${session.username}">用户</span>
             </span>
         </div>
 

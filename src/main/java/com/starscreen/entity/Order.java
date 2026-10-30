@@ -58,6 +58,8 @@ public class Order {
     @Column(length = 500)
     private String seats;
 
+    /** 订单总额。DDL 为 DECIMAL(10,2)，此处同步声明精度，避免与 schema.sql 漂移。 */
+    @Column(precision = 10, scale = 2)
     private BigDecimal totalPrice;
 
     /** pending / paid / cancelled。 */
