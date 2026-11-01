@@ -114,6 +114,18 @@ public class PageController {
         return "all-cinemas";
     }
 
+    /**
+     * 拍卖主页。
+     *
+     * <p>页面本身不查库：拍品、保证金、成交单全部由 {@code /api/auction/**} 异步拉取。
+     * 这样做的好处是页面可以被缓存、首屏不会被拍卖库拖慢，也让前端只需维护一套渲染逻辑。
+     * 未登录也能打开（只读列表匿名可访问），登录后才会出现报名/出价/我的成交。
+     */
+    @GetMapping("/auction")
+    public String auction() {
+        return "auction-index";
+    }
+
     // ==================== 选座 ====================
     @GetMapping("/seat/{scheduleId}")
     public String seat(@PathVariable Long scheduleId, Model model) {

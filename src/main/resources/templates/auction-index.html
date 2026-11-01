@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拍卖 - 星幕影票</title>
+    <link rel="stylesheet" href="/css/login-modal.css">
+    <script src="/js/auth.js" defer></script>
+    <script src="/js/auction.js" defer></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #f7f7f8; color: #1a1a1a;
+        }
+        a { text-decoration: none; color: inherit; }
+
+        .top-nav {
+            height: 72px; border-bottom: 1px solid #e5e5e5; display: flex; align-items: center;
+            padding: 0 40px; gap: 40px; background: #fff; position: sticky; top: 0; z-index: 20;
+        }
+        .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; }
+        .logo-icon {
+            width: 34px; height: 34px; border-radius: 8px; background: #d33; color: #fff;
+            display: flex; align-items: center; justify-content: center; font-size: 18px;
+        }
+        .main-menu { display: flex; gap: 28px; list-style: none; font-size: 15px; color: #444; }
+        .main-menu li.active a { color: #d33; font-weight: 600; }
+        .nav-right { margin-left: auto; font-size: 14px; color: #666; }
+
+        .wrap { max-width: 1120px; margin: 0 auto; padding: 28px 20px 60px; }
+        .page-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 18px; }
+        .page-head h1 { font-size: 24px; }
+        .page-head p { color: #888; font-size: 13px; margin-top: 6px; }
+
+        .tabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+        .tab {
+            padding: 8px 18px; border-radius: 999px; border: 1px solid #e0e0e0; background: #fff;
+            font-size: 14px; color: #555; cursor: pointer; transition: .15s;
+        }
+        .tab:hover { border-color: #d33; color: #d33; }
+        .tab.active { background: #d33; border-color: #d33; color: #fff; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+        .card {
+            background: #fff; border: 1px solid #ececec; border-radius: 12px; padding: 16px;
+            cursor: pointer; transition: .15s; display: flex; flex-direction: column; gap: 10px;
+        }
+        .card:hover { border-color: #d33; box-shadow: 0 6px 18px rgba(0,0,0,.06); transform: translateY(-2px); }
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .card-title { font-size: 15px; font-weight: 600; line-height: 1.4; }
+        .badge { font-size: 11px; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+        .badge.active { background: #fdecec; color: #d33; }
+        .badge.scheduled { background: #eef3ff; color: #3b5bdb; }
+        .badge.closed { background: #f1f1f1; color: #777; }
+        .price { font-size: 22px; font-weight: 700; color: #d33; }
+        .price small { font-size: 12px; color: #999; font-weight: 400; margin-left: 4px; }
+        .meta { display: flex; justify-content: space-between; font-size: 12px; color: #888; }
+        .countdown { font-variant-numeric: tabular-nums; }
+
+        .empty { text-align: center; color: #999; padding: 60px 0; font-size: 14px; }
+
+        .drawer-mask {
+            position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none;
+            align-items: center; justify-content: center; z-index: 50; padding: 20px;
+        }
+        .drawer-mask.open { display: flex; }
+        .drawer {
+            background: #fff; width: 520px; max-width: 100%; max-height: 88vh; overflow: auto;
+            border-radius: 14px; padding: 24px;
+        }
+        .drawer h2 { font-size: 19px; line-height: 1.4; margin-bottom: 4px; }
+        .drawer .sub { color: #999; font-size: 12px; margin-bottom: 16px; }
+        .kv { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #eee; font-size: 14px; }
+        .kv span:first-child { color: #888; }
+        .bid-box { margin-top: 18px; }
+        .bid-box label { font-size: 13px; color: #666; display: block; margin-bottom: 6px; }
+        .row { display: flex; gap: 8px; }
+        input[type=number] {
+            flex: 1; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; outline: none;
+        }
+        input[type=number]:focus { border-color: #d33; }
+        .btn {
+            padding: 10px 18px; border-radius: 8px; border: none; background: #d33; color: #fff;
+            font-size: 14px; cursor: pointer; white-space: nowrap;
+        }
+        .btn:hover { background: #b82b2b; }
+        .btn.ghost { background: #fff; color: #d33; border: 1px solid #d33; }
+        .btn.ghost:hover { background: #fdecec; }
+        .btn:disabled { background: #ddd; color: #999; cursor: not-allowed; border-color: #ddd; }
+        .hint { font-size: 12px; color: #999; margin-top: 8px; line-height: 1.6; }
+        .hint.warn { color: #d33; }
+
+        .section-title { font-size: 16px; font-weight: 600; margin: 34px 0 12px; }
+        .list { background: #fff; border: 1px solid #ececec; border-radius: 12px; overflow: hidden; }
+        .list-row {
+            display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #f2f2f2; font-size: 14px;
+        }
+        .list-row:last-child { border-bottom: none; }
+        .list-row .grow { flex: 1; min-width: 0; }
+        .list-row .t { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .list-row .s { font-size: 12px; color: #999; margin-top: 4px; }
+        .pill { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: #f1f1f1; color: #666; }
+        .pill.ok { background: #eaf7ee; color: #2f9e44; }
+        .pill.warn { background: #fff4e6; color: #d9480f; }
+        .pill.err { background: #fdecec; color: #d33; }
+
+        .toast {
+            position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%) translateY(20px);
+            background: rgba(0,0,0,.82); color: #fff; padding: 11px 20px; border-radius: 8px;
+            font-size: 14px; opacity: 0; pointer-events: none; transition: .2s; z-index: 99; max-width: 80vw;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        .loading { text-align: center; color: #bbb; padding: 40px 0; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+<header class="top-nav">
+    <a th:href="@{/}" class="logo">
+        <div class="logo-icon">星</div>
+        <div class="logo-text">星幕影票</div>
+    </a>
+    <ul class="main-menu">
+        <li><a th:href="@{/}">首页</a></li>
+        <li><a th:href="@{/movies}">电影</a></li>
+        <li><a th:href="@{/cinemas}">影院</a></li>
+        <li class="active"><a th:href="@{/auction}">拍卖</a></li>
+    </ul>
+    <div class="nav-right">
+        <a th:href="@{/orders}">我的订单</a>
+    </div>
+</header>
+
+<div class="wrap">
+    <div class="page-head">
+        <div>
+            <h1>电影藏品拍卖</h1>
+            <p>保证金参拍 · 到点自动关拍 · 成交后 24 小时内付款</p>
+        </div>
+    </div>
+
+    <div class="tabs" id="tabs">
+        <button class="tab active" data-status="ACTIVE">竞拍中</button>
+        <button class="tab" data-status="SCHEDULED">即将开始</button>
+        <button class="tab" data-status="SETTLED">已成交</button>
+        <button class="tab" data-status="UNSOLD">已流拍</button>
+    </div>
+
+    <div id="items" class="grid"></div>
+    <div id="empty" class="empty" style="display:none">暂无拍品</div>
+
+    <div class="section-title">我的参拍</div>
+    <div class="tabs">
+        <button class="tab active" id="myDepositTab">我的保证金</button>
+        <button class="tab" id="myDealTab">我的成交</button>
+    </div>
+    <div id="myList" class="list">
+        <div class="loading">登录后可查看</div>
+    </div>
+</div>
+
+<!-- 拍品详情 -->
+<div class="drawer-mask" id="drawerMask">
+    <div class="drawer">
+        <h2 id="dTitle">-</h2>
+        <div class="sub" id="dSub">-</div>
+        <div class="kv"><span>当前价</span><b id="dPrice" style="color:#d33">-</b></div>
+        <div class="kv"><span>起拍价</span><span id="dStart">-</span></div>
+        <div class="kv"><span>加价幅度</span><span id="dIncrement">-</span></div>
+        <div class="kv"><span>应缴保证金</span><span id="dDeposit">-</span></div>
+        <div class="kv"><span>领先者</span><span id="dLeader">-</span></div>
+        <div class="kv"><span>结束时间</span><span id="dEnd">-</span></div>
+        <div class="kv"><span>出价次数</span><span id="dBidCount">-</span></div>
+
+        <div class="bid-box" id="bidBox">
+            <label>出价金额（不低于 <span id="dMin">-</span>）</label>
+            <div class="row">
+                <input type="number" id="bidAmount" step="0.01" placeholder="输入出价金额">
+                <button class="btn" id="bidBtn">出价</button>
+            </div>
+            <div class="hint" id="dBidHint"></div>
+        </div>
+
+        <div class="bid-box" id="enrollBox" style="display:none">
+            <button class="btn" id="enrollBtn">缴纳保证金参拍</button>
+            <div class="hint" id="dEnrollHint"></div>
+        </div>
+
+        <div class="bid-box" id="payBox" style="display:none">
+            <button class="btn" id="payDealBtn">支付成交款</button>
+        </div>
+
+        <div style="margin-top:18px;text-align:right">
+            <button class="btn ghost" id="closeDrawer">关闭</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div th:replace="~{fragments/login-modal :: modal}"></div>
+<div th:replace="~{fragments/login-modal :: bindModal}"></div>
+
+</body>
+</html>
