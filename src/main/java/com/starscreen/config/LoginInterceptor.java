@@ -3,6 +3,7 @@ package com.starscreen.config;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+import com.starscreen.auction.web.AuctionPublicAccess;
 import com.starscreen.common.SessionConstants;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,6 +44,19 @@ public class LoginInterceptor implements HandlerInterceptor {
 
         // 2. 页面路由全部放行
         if (!uri.startsWith("/api/")) {
+            return true;
+        }
+
+        // 2.1 拍卖读接口放行（列表 / 详情 / 出价记录 / 拍品成交单）。
+        //     规则收敛在 AuctionPublicAccess，避免与 WebConfig 的白名单各写一份后分叉。
+        if (AuctionPublicAccess.isPublicRead(request.getMethod(), uri)) {
+            return true;
+        }
+
+        // 2.2 模拟支付通道：网关回调不带用户 session（真实网关同样如此，只带签名）。
+        //     要求登录会让回调永远进不来，表现为"付了钱但单据一直待支付"。
+        //     该路径是否真实存在由 app.auction.mock-pay-enabled 控制，生产关闭即 404。
+        if (AuctionPublicAccess.isMockPay(uri)) {
             return true;
         }
 
