@@ -33,6 +33,17 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!--
+          Actuator：暴露 health / metrics。
+          资金链路（发件箱积压、退款死信、悔拍滞后）只能靠指标发现——
+          这些故障的共同特征是"没有任何事件发生"，光看日志看不出来。
+          端点由 AdminInterceptor 保护，不对匿名开放。
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!-- Spring Data JPA：ORM 持久层（Hibernate 实现） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

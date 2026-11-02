@@ -21,6 +21,10 @@ mysql -u root -p --default-character-set=utf8mb4 < scripts/auction-schema.sql
 # ② 存量库补资金四表（仅当 auction 库已存在旧结构时）
 mysql -u root -p --default-character-set=utf8mb4 auction < scripts/migrate-2026-11-funds.sql
 
+# ②' 通知表 + t_user.email（两个库都要执行，脚本对两个库都安全）
+mysql -u root -p --default-character-set=utf8mb4 auction    < scripts/migrate-2026-11-notify.sql
+mysql -u root -p --default-character-set=utf8mb4 starscreen < scripts/migrate-2026-11-notify.sql
+
 # ③ 删除参数已变更的队列（关键，否则应用启动报 406 直接失败）
 curl -u <user>:<pass> -X DELETE http://<rabbit-host>:15672/api/queues/%2F/auction.deposit.queue
 curl -u <user>:<pass> -X DELETE http://<rabbit-host>:15672/api/queues/%2F/auction.dead.queue
@@ -28,6 +32,9 @@ curl -u <user>:<pass> -X DELETE http://<rabbit-host>:15672/api/queues/%2F/auctio
 # ④ 启动应用
 java -jar app.jar --server.port=8080
 ```
+
+> 通知脚本为什么要跑两次：`auction_notification` 建在拍卖库，`t_user.email` 在业务库。
+> 脚本内部先判断对象是否存在，因此在任何一个库上重复执行都不会报 1050/1060/1146。
 
 > 队列为什么必须删：RabbitMQ 在声明队列时逐项比对参数（`x-max-length`、`x-overflow`、DLX），
 > 任一项不同就返回 `PRECONDITION_FAILED - inequivalent arg`，应用启动即失败。
@@ -43,6 +50,8 @@ java -jar app.jar --server.port=8080
 | `app.auction.deal.pay-deadline-hours` | 默认 24 | 悔拍判定时点偏移 |
 | `app.auction.outbox.*` | 默认即可 | relay 间隔过长会拖慢退款 |
 | `spring.task.scheduling.pool.size` | ≥4 | 关拍任务阻塞会饿死开拍扫描 |
+| `management.endpoints.web.exposure.include` | `health,info,metrics` | 放开 `env`/`heapdump` 等于把库密码与堆内存暴露出去 |
+| `app.auction.notify.max-retry` | 默认 5 | 太大会让坏地址长期占用投递队列 |
 
 ## 4. 启动验证
 
@@ -64,6 +73,25 @@ curl -s -o /dev/null -w '%{http_code}\n' http://<host>:8080/auction       # 期�
 **数据核对**：`SELECT COUNT(*) FROM auction.auction_outbox WHERE status='PENDING';`
 正常应接近 0；持续增长说明 broker 不可达。
 
+**探活与指标**（探针用 liveness/readiness，人工排查用 health）：
+
+```bash
+# 负载均衡 / K8s 探针（匿名可访问）
+curl -s http://<host>:8080/actuator/health/liveness    # {"status":"UP"}
+curl -s http://<host>:8080/actuator/health/readiness   # 业务库 + 拍卖库都通则 UP
+
+# 全量体检（含 Redis 等所有组件；有任一 DOWN 就返回 503，用于人工定位）
+curl -s http://<host>:8080/actuator/health
+
+# 业务指标（需管理员会话；匿名返回 403）
+curl -s -b cookies.txt http://<host>:8080/actuator/metrics/auction.outbox.pending
+```
+
+> **探针必须用 liveness/readiness，不要用 `/actuator/health`**：
+> 后者包含 Redis，而 Redis 在本项目只承担限流（fail-open）与短信验证码，
+> 它抖动时拍卖与票务主流程仍然正常。用全量 health 做探针会导致实例被反复摘除/重启。
+> 实测本机未起 Redis 时：`health` 503、`health/readiness` 200 —— 这正是期望行为。
+
 ## 5. 常见故障对照
 
 | 现象 | 首查 | 处置 |
@@ -74,15 +102,33 @@ curl -s -o /dev/null -w '%{http_code}\n' http://<host>:8080/auction       # 期�
 | 拍品到点不开拍 | `SELECT COUNT(*) FROM auction_item WHERE status='SCHEDULED' AND start_time<=NOW()` | 有积压看调度线程栈与拍卖库连接池 |
 | 未中标者钱不退 | `auction_deposit` 的 `status` 与 `refund_trigger_at` | 若 `refund_trigger_at` 为空查 outbox 与消费者；若 `REFUND_DEAD` 走人工 |
 | 成交后没有成交单 | `auction_deal` 是否唯一键冲突 | 撞 `uk_deal_item` 属幂等，查审计日志 `DEAL_CREATED` |
+| `/actuator/metrics` 匿名就能访问 | 拦截器是否注册在 actuator 的 HandlerMapping 上 | **拦截器管不到 actuator**，鉴权必须在 Filter（`ActuatorGuardFilter`）里做 |
+| 普通用户能发布拍品 | `AuctionController.create` 的权限判断 | 发布已收口为仅 ADMIN，返回 403「仅管理员可发布拍品」 |
+| 用户收不到邮件 | `auction_notification.delivery_status` | `SKIPPED` = 该用户没填邮箱；`DEAD` = 重试耗尽需人工；`SENT` 但没收到 → 当前是 `LogMailSender`，只打日志未真正发信 |
+| 通知正文时间是 `2026-11-03T10:03:38.605` | 通知文案里直接拼了 `LocalDateTime` | 已统一用 `NOTIFY_TIME` 格式化，出现即说明有新代码绕开了它 |
 
-## 6. 监控建议（当前靠日志，后续补指标）
+## 6. 监控指标与告警阈值
 
-| 指标 | 阈值 | 含义 |
+指标由 `AuctionMetrics` 注册，走 `/actuator/metrics/<name>`（需管理员会话）。
+值为 `-1` 表示**查询失败**，与真实的 0 不同，见到 -1 应先查拍卖库连通性。
+
+| 指标 | 告警阈值 | 含义与处置 |
 |---|---|---|
-| `auction_outbox` status=PENDING | >200 持续 5 分钟 | broker 或消费者异常 |
-| `auction_outbox` status=DEAD | >0 | 需人工重放（payload 保留） |
-| `auction_deposit` status=REFUND_DEAD | >0 | 退款失败需人工 |
-| `SCHEDULED` 且 `start_time<=NOW()` | >0 持续 1 分钟 | 开拍调度卡住 |
+| `auction.outbox.pending` | >200 持续 5 分钟 | broker 不可达或 relay 未运行；查 broker 与 `OutboxRelay` 日志 |
+| `auction.outbox.dead` | >0 | 需人工重放，payload 仍在表里，不自动重投 |
+| `auction.item.scheduled.backlog` | >0 持续 1 分钟 | 开拍扫描卡住；查调度线程栈与拍卖库连接池 |
+| `auction.deposit.refund.backlog` | >50 持续 10 分钟 | 退款 worker 未推进；含 `HELD`（已触发未抢到）与 `REFUNDING` |
+| `auction.deposit.refund.dead` | >0 | 退款失败已放弃自动重试，必须人工转账并留痕 |
+| `auction.deal.overdue` | >0 持续 2 分钟 | 悔拍扫描滞后；这笔钱会一直挂在待支付 |
+| `auction.deal.pending` | 无阈值（观察量） | 待支付存量，用于判断资金在途规模 |
+| `auction.notify.dead` | >0 | 邮件重试耗尽；站内信仍可查，仅外发未达 |
+
+**为什么这些指标必须查库而不是用计数器**：它们要回答"现在积压了多少"。
+发件箱不投递、退款不执行、悔拍不判定，都表现为"零事件"——
+计数器只会显示 0，而这些恰恰是最危险的故障。
+
+日志侧另有一条兜底告警：`AuctionFundsScheduler.reportBacklog()` 每 5 分钟检查一次，
+`DEAD>0` 或 `PENDING>200` 会打 `【资金链路告警】`，适合没接指标系统时先用。
 
 ## 7. 回滚方案
 
@@ -96,11 +142,17 @@ curl -s -o /dev/null -w '%{http_code}\n' http://<host>:8080/auction       # 期�
 
 ## 8. 上线检查单
 
-- [ ] DDL 已在目标库执行（`SHOW TABLES` 能看到 7 张 auction_* 表）
+- [ ] DDL 已在目标库执行（`SHOW TABLES` 能看到 7 张 auction_* 表 + `auction_notification`）
+- [ ] 业务库 `t_user.email` 已加（`SHOW COLUMNS FROM t_user LIKE 'email'`）
 - [ ] 旧队列已删除
 - [ ] `app.auction.mock-pay-enabled=false`
 - [ ] 拍卖库账号可读写（`SELECT 1` 通过）
 - [ ] 启动日志无 ERROR，出现 `Started`
 - [ ] 冒烟接口返回 200
+- [ ] `health/liveness` 与 `health/readiness` 均返回 UP
+- [ ] 探针已配置为 liveness/readiness（**不是** `/actuator/health`）
+- [ ] 匿名访问 `/actuator/metrics` 返回 403
+- [ ] 运营账号为 ADMIN，且能打开 `/admin/auction` 发布拍品
 - [ ] 发件箱 PENDING 计数正常
 - [ ] 已通知业务方：保证金走支付通道，退款为异步（秒级到分钟级）
+- [ ] 已通知业务方：当前邮件为日志模拟（`LogMailSender`），如需真实发信须接入 SMTP 实现

@@ -50,9 +50,9 @@ public class AdminInterceptor implements HandlerInterceptor {
         Optional<User> userOpt = userRepository.findById((Long) userId);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            // FIXME: user.getDeleted() 若为 null 会 NPE。建议改为
-            //        Boolean.FALSE.equals(user.getDeleted())。本次不改逻辑。
-            if (RoleConstants.ADMIN.equals(user.getRole()) && !user.getDeleted()) {
+            // 原写法 !user.getDeleted() 在字段为 null 时 NPE——老数据里 deleted 可能没写值，
+            // 会让所有管理端请求 500。按"null 视为未删除"处理，与其它查询口径一致。
+            if (RoleConstants.ADMIN.equals(user.getRole()) && !Boolean.TRUE.equals(user.getDeleted())) {
                 return true;
             }
         }
@@ -61,10 +61,16 @@ public class AdminInterceptor implements HandlerInterceptor {
         return handleUnauthorized(request, response);
     }
 
-    /** API 返回 403 JSON，页面重定向首页。 */
+    /**
+     * API 与 actuator 返回 403 JSON，页面请求重定向首页。
+     *
+     * <p>actuator 不跟着重定向：监控系统/curl 拿到 302 到首页会当成"服务正常但有跳转"，
+     * 真正的原因是没权限——直接 403 才能让人一眼看出是鉴权问题。
+     */
     private boolean handleUnauthorized(HttpServletRequest request,
                                        HttpServletResponse response) throws IOException {
-        if (request.getRequestURI().startsWith("/api/")) {
+        String uri = request.getRequestURI();
+        if (uri.startsWith("/api/") || uri.startsWith("/actuator")) {
             response.setStatus(403);
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write(

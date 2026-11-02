@@ -45,6 +45,9 @@ public class WebConfig implements WebMvcConfigurer {
                         "/api/cinemas/**");
 
         // 3. 管理员拦截
+        //    注意：actuator 不在这里。它由 Spring Boot 自己的 WebMvcEndpointHandlerMapping
+        //    处理，MVC 拦截器对它无效（实测加了也照样匿名 200），
+        //    所以改由 ActuatorGuardFilter 在 Servlet 层鉴权。
         registry.addInterceptor(adminInterceptor)
                 .addPathPatterns("/api/admin/**", "/admin/**");
     }
