@@ -82,14 +82,19 @@ public interface SeatRepository extends JpaRepository<Seat, Long> {
     /**
      * 【批量更新】支付成功：把该订单下所有 locked 的座位改成 sold
      */
-    @Modifying
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("UPDATE Seat s SET s.status = 'sold' WHERE s.orderId = :orderId AND s.status = 'locked'")
     int updateToSoldByOrderId(@Param("orderId") Long orderId);
 
     /**
      * 【批量更新】取消订单/超时：把该订单下所有 locked 的座位释放成 available，并清空 orderId
+     *
+     * <p><b>必须走条件 UPDATE，不能"查出实体改字段再 saveAll"</b>：
+     * 下单时锁座用的也是条件 UPDATE，一级缓存里的 Seat 仍是 available / orderId=null。
+     * 此时对内存实体设成同样的值，脏检查认为"没有变化"，一条 UPDATE 都不会发出去——
+     * 结果就是订单取消了、座位还锁着。直接打库则不受缓存影响。
      */
-    @Modifying
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("UPDATE Seat s SET s.status = 'available', s.orderId = null WHERE s.orderId = :orderId AND s.status = 'locked'")
     int releaseSeatsByOrderId(@Param("orderId") Long orderId);
     

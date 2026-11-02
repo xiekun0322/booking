@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -85,6 +86,12 @@ public class OrderService {
 
     /** 订单号 / 取票码生成用的随机数 */
     private static final java.security.SecureRandom RANDOM = new java.security.SecureRandom();
+
+    /**
+     * 取票码字符集：去掉 0/O/1/I/L 等易混字符。
+     * 取票码是人工核验的，看错一个字符就要重新查订单。
+     */
+    private static final char[] TICKET_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789".toCharArray();
 
     private final OrderRepository orderRepository;
     private final SeatRepository seatRepository;
@@ -242,51 +249,72 @@ public class OrderService {
         if (userId != null && !userId.equals(order.getUserId())) {
             throw new BusinessException("无权操作该订单");
         }
+        // 重复支付要给明确文案：这句话会直接展示给用户，
+        // "状态不允许支付：paid" 既看不懂，也没告诉他该怎么办。
+        if (StatusConstants.PAID.equals(order.getStatus())) {
+            throw new BusinessException("订单已支付，请勿重复支付");
+        }
         if (!StatusConstants.PENDING.equals(order.getStatus())) {
             throw new BusinessException("订单状态不允许支付：" + order.getStatus());
         }
 
         String mockTradeNo = "WX_" + System.currentTimeMillis();
         log.info("向第三方支付网关发起统一下单，订单号：{}，流水号：{}", order.getOrderNo(), mockTradeNo);
+
+        // 当前没有真实网关：pay() 内部直接完成"支付成功"，与回调共用 markPaid，
+        // 保证两条入口的状态流转完全一致。接真实网关时把这一行挪回 handlePayCallback，
+        // 其余逻辑不用改。
+        markPaid(orderId);
         
         return "http://mock-pay.com?tradeNo=" + mockTradeNo;
     }
 
     /**
-     * 支付回调（由第三方服务器调用）
+     * 支付回调（由第三方服务器调用）。
+     *
+     * <p>与 {@link #pay} 共用 {@link #markPaid}：真实网关接入后，pay() 只负责下单拿地址，
+     * 落库只在这里发生。两条入口共用同一段状态流转，避免"模拟支付能过、真实回调不行"。
      */
     @Transactional
     public Order handlePayCallback(Long orderId) {
-        // 【新增这一行】防止传入的 orderId 为 null，同时消除红波浪线
+        return markPaid(orderId);
+    }
+
+    /**
+     * 支付成功的唯一落库点。
+     *
+     * <p>全程用条件 UPDATE，不"查出实体再 save"：
+     * 先 save 会把内存里的旧 status 写回去，覆盖掉刚更新的 paid——这正是
+     * "日志显示支付成功、订单却还是 pending"的根因。
+     *
+     * <p>条件更新影响行数为 0 表示"已经不是 pending"（回调重放、重复支付、订单已取消），
+     * 此时返回当前真实状态，不做二次修改，天然幂等。
+     */
+    @Transactional
+    public Order markPaid(Long orderId) {
         if (orderId == null) {
             throw new BusinessException("订单ID不能为空");
         }
 
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new BusinessException(MSG_ORDER_NOT_FOUND));
-
         LocalDateTime now = LocalDateTime.now();
-        
-        // 核心：原子更新
-        // 只传两个参数：订单ID和当前时间
-        int affected = orderRepository.updateToPaid(orderId, now);
+        String ticketCode = generateTicketCode();
 
+        int affected = orderRepository.markPaid(orderId, now, ticketCode);
         if (affected == 0) {
-            log.warn("【支付回调】处理失败，订单已被处理过或已取消，orderId={}", orderId);
-            return order;
+            log.warn("【支付回调】条件更新未命中，订单已被处理过或已取消，orderId={}", orderId);
+            return orderRepository.findById(orderId)
+                    .orElseThrow(() -> new BusinessException(MSG_ORDER_NOT_FOUND));
         }
 
-        order.setPayTime(now);
-        orderRepository.save(order);
+        // 座位 locked → sold：同样走条件 UPDATE，绕过脏检查
+        int seats = seatRepository.updateToSoldByOrderId(orderId);
 
-        // -------- 座位 locked → sold --------
-        List<Seat> seats = seatRepository.findByOrderId(order.getId());
-        for (Seat seat : seats) seat.setStatus("sold");
-        seatRepository.saveAll(seats);
+        Order paid = orderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException(MSG_ORDER_NOT_FOUND));
 
-        log.info("订单支付成功：orderId={}, orderNo={}, ticketCode={}, totalPrice={}",
-                orderId, order.getOrderNo(), order.getTicketCode(), order.getTotalPrice());
-        return order;
+        log.info("订单支付成功：orderId={}, orderNo={}, ticketCode={}, totalPrice={}, 座位数={}",
+                orderId, paid.getOrderNo(), ticketCode, paid.getTotalPrice(), seats);
+        return paid;
     }
 
     // ==================== 3. 取消订单 ====================
@@ -322,12 +350,18 @@ public class OrderService {
         if (StatusConstants.PAID.equals(order.getStatus())) throw new BusinessException("已支付订单不可取消");
         if (StatusConstants.CANCELLED.equals(order.getStatus())) return order;   // 幂等：已取消直接返回
 
-        order.setStatus(StatusConstants.CANCELLED);
-        orderRepository.save(order);
-        releaseSeats(order.getId());                                // 座位回 available
+        // 条件更新替代 save：并发下"用户取消"与"支付回调"只能有一个成功，
+        // 影响行数为 0 说明订单刚被支付，直接返回真实状态，不覆盖。
+        if (orderRepository.updateToCancelled(orderId) == 0) {
+            return orderRepository.findById(orderId)
+                    .orElseThrow(() -> new BusinessException(MSG_ORDER_NOT_FOUND));
+        }
+        releaseSeats(orderId);                                      // 座位回 available
 
-        log.info("手动取消订单：orderId={}, orderNo={}", orderId, order.getOrderNo());
-        return order;
+        Order cancelled = orderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException(MSG_ORDER_NOT_FOUND));
+        log.info("手动取消订单：orderId={}, orderNo={}", orderId, cancelled.getOrderNo());
+        return cancelled;
     }
 
     // ==================== 4. 定时释放超时订单 ====================
@@ -370,8 +404,11 @@ public class OrderService {
 
             // -------- 超时判断 --------
             if (created.plusMinutes(PAY_TIMEOUT_MINUTES).isBefore(now)) {
-                order.setStatus("cancelled");
-                orderRepository.save(order);
+                // 条件更新：与用户手动取消、支付回调并发时只有一个能成功，
+                // 没抢到说明订单状态已经变了，跳过即可
+                if (orderRepository.updateToCancelled(order.getId()) == 0) {
+                    continue;
+                }
                 releaseSeats(order.getId());
                 cancelledCount++;
                 log.info("超时取消订单：orderId={}, orderNo={}", order.getId(), order.getOrderNo());
@@ -431,12 +468,31 @@ public class OrderService {
      * 【副作用】同时清空 seat.orderId，方便下次被新订单占用。
      */
     private void releaseSeats(Long orderId) {
-        List<Seat> seats = seatRepository.findByOrderId(orderId);
-        for (Seat seat : seats) {
-            seat.setStatus("available");
-            seat.setOrderId(null);
+        // 条件 UPDATE 直接打库：锁座用的也是条件 UPDATE，一级缓存里的 Seat
+        // 仍是 available / orderId=null，再改内存实体等于"没有变化"，
+        // 脏检查不会发出任何 SQL——这就是"订单取消了、座位还锁着"的原因。
+        int released = seatRepository.releaseSeatsByOrderId(orderId);
+        if (released > 0) {
+            log.debug("释放座位 {} 个：orderId={}", released, orderId);
         }
-        seatRepository.saveAll(seats);
+    }
+
+    /**
+     * 【功能】生成取票码，格式 {@code XXXX-XXXX}。
+     *
+     * <p>字符集去掉了 0/O/1/I/L 等易混字符：取票码是给人工核验的，
+     * 看错一个字符就要重新查订单。
+     */
+    private String generateTicketCode() {
+        StringBuilder sb = new StringBuilder(9);
+        for (int i = 0; i < 4; i++) {
+            sb.append(TICKET_ALPHABET[ThreadLocalRandom.current().nextInt(TICKET_ALPHABET.length)]);
+        }
+        sb.append('-');
+        for (int i = 0; i < 4; i++) {
+            sb.append(TICKET_ALPHABET[ThreadLocalRandom.current().nextInt(TICKET_ALPHABET.length)]);
+        }
+        return sb.toString();
     }
 
     /**

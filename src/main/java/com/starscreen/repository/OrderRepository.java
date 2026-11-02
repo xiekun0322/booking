@@ -136,12 +136,26 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
             "GROUP BY DATE(o.create_time) ORDER BY day ASC", nativeQuery = true)
     List<DailyRevenueProjection> dailyRevenue();
     
-    // 进阶版 SQL：加上时间判断  
-    @Modifying
-    @Query("UPDATE Order o SET o.status = 'paid', o.payTime = :payTime WHERE o.id = :id AND o.status = 'pending'")
-    int updateToPaid(@Param("id") Long id, @Param("payTime") LocalDateTime payTime);
+    /**
+     * 支付成功：pending → paid，同时写入支付时间与取票码。
+     *
+     * <p><b>为什么不用"查实体再 save"</b>：bulk update 不经过持久化上下文，
+     * 之后对内存里那个旧实体调 {@code save()} 会把旧 status 写回数据库，
+     * 表现为"回调执行了、日志也打了、订单还是 pending"。
+     * 这里一次条件更新写完三个字段，且 {@code clearAutomatically} 让后续读取
+     * 重新查库拿到真实值。
+     *
+     * <p>取票码只在首次支付时生成：条件里带 {@code status = 'pending'}，
+     * 回调重放时影响行数为 0，不会覆盖已发出的码。
+     */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("UPDATE Order o SET o.status = 'paid', o.payTime = :payTime, o.ticketCode = :ticketCode "
+            + "WHERE o.id = :id AND o.status = 'pending'")
+    int markPaid(@Param("id") Long id,
+                 @Param("payTime") LocalDateTime payTime,
+                 @Param("ticketCode") String ticketCode);
 
-    @Modifying
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("UPDATE Order o SET o.status = 'cancelled' WHERE o.id = :id AND o.status = 'pending'")
     int updateToCancelled(@Param("id") Long id);
 }
