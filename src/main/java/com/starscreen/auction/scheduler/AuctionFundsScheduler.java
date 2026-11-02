@@ -10,6 +10,7 @@ import com.starscreen.auction.enums.OutboxStatus;
 import com.starscreen.auction.repository.AuctionOutboxRepository;
 import com.starscreen.auction.service.DealOverdueSweeper;
 import com.starscreen.auction.service.DepositRefundWorker;
+import com.starscreen.auction.service.NotificationDeliveryWorker;
 
 import lombok.RequiredArgsConstructor;
 
@@ -42,6 +43,7 @@ public class AuctionFundsScheduler {
 
     private final DepositRefundWorker refundWorker;
     private final DealOverdueSweeper overdueSweeper;
+    private final NotificationDeliveryWorker notificationDeliveryWorker;
     private final AuctionOutboxRepository outboxRepository;
 
     /** 退款重试扫描。 */
@@ -61,6 +63,16 @@ public class AuctionFundsScheduler {
             overdueSweeper.sweepOverdue();
         } catch (RuntimeException e) {
             log.error("悔拍扫描失败，下一轮重试", e);
+        }
+    }
+
+    /** 通知外发投递（站内信写入即送达，这里只处理邮件）。 */
+    @Scheduled(fixedDelayString = "${app.auction.notify.deliver-interval-ms:10000}")
+    public void deliverNotifications() {
+        try {
+            notificationDeliveryWorker.sweep();
+        } catch (RuntimeException e) {
+            log.error("通知投递扫描失败，下一轮重试", e);
         }
     }
 

@@ -38,6 +38,15 @@ public interface AuctionDealRepository extends JpaRepository<AuctionDeal, Long> 
     long countByStatus(DealStatus status);
 
     /**
+     * 监控：某状态下已过截止时间的条数。
+     *
+     * <p>用于 {@code auction.deal.overdue}：{@code PENDING_PAYMENT} 且 {@code pay_deadline < now}
+     * 持续大于 0，说明悔拍扫描没跑起来——这笔钱会一直挂在"待支付"，
+     * 中标者保证金也永远不会被罚没或退还。
+     */
+    long countByStatusAndPayDeadlineBefore(DealStatus status, LocalDateTime time);
+
+    /**
      * 支付成功：PENDING_PAYMENT → PAID。
      *
      * <p>带 {@code pay_deadline > :now} 吗？<b>不带</b>——用户可能在截止前一刻付款、

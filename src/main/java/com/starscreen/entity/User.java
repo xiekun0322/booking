@@ -41,6 +41,15 @@ public class User {
     @Column(unique = true, length = 20)
     private String phone;
 
+    /**
+     * 邮箱：仅用于拍卖通知外发，可空。
+     *
+     * <p>不加唯一约束——历史数据里可能有多人共用一个邮箱（比如前台代收），
+     * 加了会让存量数据迁移直接失败，而通知对重复并不敏感。
+     */
+    @Column(length = 120)
+    private String email;
+
     @Column(length = 30)
     private String createTime;
 

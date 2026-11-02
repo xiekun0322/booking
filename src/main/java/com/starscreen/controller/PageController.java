@@ -209,6 +209,17 @@ public class PageController {
         return RoleConstants.VIEW_ADMIN_ORDERS;
     }
 
+    /**
+     * 拍卖管理：发布拍品、按状态查看、取消排期。
+     *
+     * <p>受 {@code AdminInterceptor} 保护（匹配 {@code /admin/**}），
+     * 与 {@code /api/auction/items} 的发布接口共用同一套权限判断。
+     */
+    @GetMapping("/admin/auction")
+    public String adminAuction(Model model) {
+        return RoleConstants.VIEW_ADMIN_AUCTION;
+    }
+
 
     // ==================== 登录页 ====================
     @GetMapping("/login")

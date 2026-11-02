@@ -49,13 +49,25 @@ public class AuctionController {
 
     // ==================== 发布 ====================
 
-    /** 发布拍品（登录用户即可，卖家取当前登录账号）。 */
+    /**
+     * 发布拍品。
+     *
+     * <p><b>仅管理员可发布</b>：拍品上架属于运营动作，原先"任何登录用户都能发布"意味着
+     * 任意注册用户都能往交易所里塞标的——既是越权，也让 {@code seller_id} 失去意义。
+     * 这里与 {@link #cancel} 保持同一套判断（Session 里的 role），不引入新的权限模型。
+     *
+     * <p>卖家名仍取请求体：运营代发布时用它记录真实委托人，
+     * 而 {@code sellerId} 落的是操作者，便于审计追责。
+     */
     @PostMapping("/items")
     public Result<AuctionItemDTO> create(@Valid @RequestBody CreateAuctionItemRequest request,
                                          HttpServletRequest httpRequest) {
         Long userId = currentUserId(httpRequest);
         if (userId == null) {
             return Result.error(401, "请先登录");
+        }
+        if (!isAdmin(httpRequest)) {
+            return Result.error(403, "仅管理员可发布拍品");
         }
         return Result.success(auctionService.create(request, userId, request.getSellerName()));
     }

@@ -303,6 +303,11 @@
             box.innerHTML = '<div class="loading">登录后可查看</div>';
             return;
         }
+        if (state.myMode === 'notify') {
+            loadNotifications(box);
+            return;
+        }
+
         var url = state.myMode === 'deposit' ? '/api/auction/deposits/mine' : '/api/auction/deals/mine';
         box.innerHTML = '<div class="loading">加载中…</div>';
 
@@ -343,8 +348,68 @@
         });
     }
 
-    /** 从"我的成交"直接付款：先取详情拿 itemId，再复用 payDeal 流程。 */
-    function payDealById(dealId) {
+    // ==================== 我的消息 ====================
+
+    /**
+     * 消息列表。
+     *
+     * 与保证金/成交不同，这个接口返回的是分页对象（content/…）而不是数组，
+     * 所以单独走一条加载路径，不硬塞进上面的分支里。
+     */
+    function loadNotifications(box) {
+        get('/api/auction/notifications/mine?page=1&size=50').then(function (page) {
+            var rows = (page && page.content) || [];
+            loadUnread();
+            if (!rows.length) {
+                box.innerHTML = '<div class="loading">暂无消息</div>';
+                return;
+            }
+            box.innerHTML = rows.map(function (n) {
+                var unread = !n.readFlag;
+                return '<div class="list-row' + (unread ? ' unread' : '') + '" data-notify="' + n.id + '">' +
+                    '<div class="grow">' +
+                    '<div class="t">' + (unread ? '<span class="unread-dot"></span>' : '') +
+                    escapeHtml(n.title) + ' <span class="pill">' + escapeHtml(n.typeText || '') + '</span></div>' +
+                    '<div class="s">' + escapeHtml(n.content) + '</div>' +
+                    '<div class="s">' + fmtTime(n.createTime) + '</div>' +
+                    '</div></div>';
+            }).join('');
+
+            Array.prototype.forEach.call(box.querySelectorAll('[data-notify]'), function (row) {
+                row.addEventListener('click', function () {
+                    if (!row.classList.contains('unread')) return;
+                    var id = row.getAttribute('data-notify');
+                    post('/api/auction/notifications/' + id + '/read').then(function () {
+                        row.classList.remove('unread');
+                        var dot = row.querySelector('.unread-dot');
+                        if (dot) dot.remove();
+                        loadUnread();
+                    }).catch(fail);
+                });
+            });
+        }).catch(function (e) {
+            box.innerHTML = '<div class="loading">登录后可查看</div>';
+            fail(e);
+        });
+    }
+
+    /** 未读角标。失败静默：角标拿不到不应该在页面上弹错误。 */
+    function loadUnread() {
+        if (!window.currentUser) return;
+        get('/api/auction/notifications/unread-count').then(function (n) {
+            var badge = $('notifyBadge');
+            if (!badge) return;
+            var count = Number(n) || 0;
+            if (count > 0) {
+                badge.textContent = count > 99 ? '99+' : count;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }).catch(function () { /* 静默 */ });
+    }
+
+    /** 从"我的成交"直接付款：先取详情拿 itemId，再复用 payDeal 流程。 */    function payDealById(dealId) {
         post('/api/auction/deals/' + dealId + '/pay')
             .then(function (ticket) {
                 toast('已创建支付单 ' + ticket.payNo);
@@ -375,12 +440,21 @@
             state.myMode = 'deposit';
             $('myDepositTab').classList.add('active');
             $('myDealTab').classList.remove('active');
+            $('myNotifyTab').classList.remove('active');
             loadMyList();
         });
         $('myDealTab').addEventListener('click', function () {
             state.myMode = 'deal';
             $('myDealTab').classList.add('active');
             $('myDepositTab').classList.remove('active');
+            $('myNotifyTab').classList.remove('active');
+            loadMyList();
+        });
+        $('myNotifyTab').addEventListener('click', function () {
+            state.myMode = 'notify';
+            $('myNotifyTab').classList.add('active');
+            $('myDepositTab').classList.remove('active');
+            $('myDealTab').classList.remove('active');
             loadMyList();
         });
 
@@ -398,5 +472,13 @@
         loadItems();
         // auth.js 会在 DOMContentLoaded 拉取登录态，这里延后一拍再读
         setTimeout(loadMyList, 600);
+        setTimeout(loadUnread, 600);
+
+        // 支持 /auction?item=123 直接打开详情：后台"查看"、分享链接都靠它，
+        // 否则点过去只会落在列表首屏，还得自己再找一次。
+        var target = new URLSearchParams(window.location.search).get('item');
+        if (target && /^\d+$/.test(target)) {
+            openDetail(target);
+        }
     });
 })();

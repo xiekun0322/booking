@@ -63,6 +63,10 @@ public class AuctionProperties {
 
     private Outbox outbox = new Outbox();
 
+    // ==================== 通知（决策 D9） ====================
+
+    private Notify notify = new Notify();
+
     /** 保证金定价参数。 */
     @Data
     public static class Deposit {
@@ -124,5 +128,26 @@ public class AuctionProperties {
 
         /** 每次清理的条数上限。 */
         private int purgeBatch = 1_000;
+    }
+
+    /**
+     * 通知外发参数。
+     *
+     * <p>站内信插入即送达，不需要配置；这里只控制邮件/短信这类外部通道的重试节奏。
+     */
+    @Data
+    public static class Notify {
+
+        /** 外发最大重试次数，超过转 DEAD（站内信不受影响）。 */
+        private int maxRetry = 5;
+
+        /** 退避基数（秒）：5、10、20、40、80… */
+        private long baseBackoffSeconds = 5L;
+
+        /** 投递扫描间隔（毫秒）。 */
+        private long deliverIntervalMs = 10_000L;
+
+        /** 单批投递条数。 */
+        private int batchSize = 50;
     }
 }

@@ -2,6 +2,7 @@ package com.starscreen.auction.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -23,6 +24,7 @@ import com.starscreen.auction.entity.AuctionDeal;
 import com.starscreen.auction.entity.AuctionDeposit;
 import com.starscreen.auction.entity.AuctionItem;
 import com.starscreen.auction.enums.DealStatus;
+import com.starscreen.auction.enums.NotificationType;
 import com.starscreen.auction.enums.PayBizType;
 import com.starscreen.auction.mq.OutboxWriter;
 import com.starscreen.auction.pay.MockPayService;
@@ -52,6 +54,15 @@ public class DealService {
 
     private static final Logger log = LoggerFactory.getLogger(DealService.class);
 
+    /**
+     * 通知正文里的时间格式。
+     *
+     * <p>不能直接拼 {@code LocalDateTime}：默认 toString 会输出
+     * {@code 2026-11-03T10:03:38.605876100}，用户看到的是一串纳秒。
+     */
+    private static final DateTimeFormatter NOTIFY_TIME =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     private final AuctionDealRepository dealRepository;
     private final AuctionDepositRepository depositRepository;
     private final AuctionItemRepository itemRepository;
@@ -60,6 +71,7 @@ public class DealService {
     private final AuctionIdGenerator idGenerator;
     private final AuctionAuditWriter auditWriter;
     private final AuctionProperties properties;
+    private final NotificationService notificationService;
 
     /**
      * 为成交的拍品生成成交单（同事务、幂等）。
@@ -104,6 +116,17 @@ public class DealService {
         auditWriter.write("DEAL", deal.getId(), item.getLeaderId(), "SYSTEM", "DEAL_CREATED",
                 "dealNo=" + deal.getDealNo() + ", price=" + deal.getDealPrice()
                         + ", deadline=" + deal.getPayDeadline(), null);
+
+        // 通知写在同一个事务里：成交单提交了，通知就必须在。买家错过这条消息就是悔拍，
+        // 属于"必须送达"的节点，不能容忍 afterCommit 阶段丢失。
+        notificationService.notify(deal.getBuyerId(), NotificationType.DEAL_WON,
+                "恭喜成交：" + safeTitle(item.getTitle()),
+                "您以 ¥" + deal.getDealPrice() + " 竞得「" + safeTitle(item.getTitle())
+                        + "」，成交单号 " + deal.getDealNo()
+                        + "。请在 " + NOTIFY_TIME.format(deal.getPayDeadline()) + " 前完成支付，"
+                        + "逾期将判定悔拍，保证金不予退还。",
+                "DEAL", deal.getId());
+
         log.info("【拍卖】成交单已生成 dealId={} dealNo={} itemId={} price={} deadline={}",
                 deal.getId(), deal.getDealNo(), item.getId(), deal.getDealPrice(), deal.getPayDeadline());
         return deal;
@@ -167,6 +190,16 @@ public class DealService {
 
         auditWriter.write("DEAL", deal.getId(), deal.getBuyerId(), "SYSTEM", "DEAL_CANCEL_OVERDUE",
                 "dealNo=" + deal.getDealNo() + ", deadline=" + deal.getPayDeadline(), null);
+
+        // 措辞是"判定悔拍、保证金不予退还"而不是"已罚没"：
+        // 罚没由消费者异步执行，此刻状态不一定已落库，通知不能陈述尚未发生的事实。
+        notificationService.notify(deal.getBuyerId(), NotificationType.DEPOSIT_FORFEITED,
+                "悔拍：成交已取消",
+                "成交单 " + deal.getDealNo() + " 已超过支付截止时间（"
+                        + NOTIFY_TIME.format(deal.getPayDeadline())
+                        + "），判定为悔拍，保证金不予退还。如需继续参与，可重新缴纳保证金后参拍。",
+                "DEAL", deal.getId());
+
         log.warn("【拍卖】成交单超时未付，判定悔拍 dealId={} dealNo={} buyer={}",
                 deal.getId(), deal.getDealNo(), deal.getBuyerId());
         return true;
@@ -240,6 +273,11 @@ public class DealService {
      * <p>只做记录用途：真正退多少以 {@code auction_deposit.amount} 为准，
      * 这里的值用于展示"这单押了多少"，不参与退款计算。
      */
+    /** 标题兜底：通知正文里不能出现 "null"，历史数据可能存在空标题。 */
+    private String safeTitle(String title) {
+        return title == null || title.isBlank() ? "拍品" : title;
+    }
+
     private BigDecimal resolveDepositAmount(AuctionItem item) {
         if (item.getLeaderId() == null) {
             return BigDecimal.ZERO;

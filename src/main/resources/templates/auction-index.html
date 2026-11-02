@@ -101,6 +101,10 @@
         .list-row .t { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .list-row .s { font-size: 12px; color: #999; margin-top: 4px; }
         .pill { font-size: 12px; padding: 3px 9px; border-radius: 999px; background: #f1f1f1; color: #666; }
+        /* 未读角标：与状态标签（.badge）区分开，避免同样的灰色胶囊被误读成状态 */
+        .unread-badge { display: inline-block; min-width: 18px; height: 18px; line-height: 18px; padding: 0 5px; margin-left: 6px; border-radius: 999px; background: #d33; color: #fff; font-size: 11px; text-align: center; }
+        .unread-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #d33; margin-right: 6px; vertical-align: middle; }
+        .list-row.unread .t { font-weight: 700; }
         .pill.ok { background: #eaf7ee; color: #2f9e44; }
         .pill.warn { background: #fff4e6; color: #d9480f; }
         .pill.err { background: #fdecec; color: #d33; }
@@ -155,6 +159,7 @@
     <div class="tabs">
         <button class="tab active" id="myDepositTab">我的保证金</button>
         <button class="tab" id="myDealTab">我的成交</button>
+        <button class="tab" id="myNotifyTab">我的消息<span id="notifyBadge" class="unread-badge" style="display:none"></span></button>
     </div>
     <div id="myList" class="list">
         <div class="loading">登录后可查看</div>

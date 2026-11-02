@@ -191,3 +191,31 @@ CREATE TABLE IF NOT EXISTS auction_pay_order (
     KEY idx_pay_biz (biz_type, biz_id),
     KEY idx_pay_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='拍卖支付单（模拟通道路账本）';
+
+-- -----------------------------------------------------------------------------
+-- 8. 通知（站内信 + 外发投递记录）
+-- -----------------------------------------------------------------------------
+-- 一条记录同时承载"站内信"与"一次外发投递"：站内信插入即送达，
+-- 只有邮件需要异步发送与重试，拆两张表只会多一次 join。
+-- 写在业务事务内（成交/支付/退款成功则通知必在）；外发由定时 worker 投递。
+CREATE TABLE IF NOT EXISTS auction_notification (
+    id              BIGINT       NOT NULL AUTO_INCREMENT,
+    user_id         BIGINT       NOT NULL COMMENT '收件人（裸 ID，不建跨库外键）',
+    type            VARCHAR(40)  NOT NULL COMMENT 'DEAL_WON/DEAL_PAID/DEPOSIT_REFUNDED/DEPOSIT_FORFEITED/DEPOSIT_REFUND_FAILED',
+    title           VARCHAR(120) NOT NULL,
+    content         VARCHAR(500) NOT NULL,
+    biz_type        VARCHAR(20)  DEFAULT NULL COMMENT 'DEAL / DEPOSIT / ITEM',
+    biz_id          BIGINT       DEFAULT NULL,
+    read_flag       TINYINT      NOT NULL DEFAULT 0 COMMENT '0 未读 / 1 已读',
+    email           VARCHAR(120) DEFAULT NULL COMMENT '为空则投递置 SKIPPED',
+    delivery_status VARCHAR(20)  NOT NULL DEFAULT 'PENDING' COMMENT 'PENDING/SENT/SKIPPED/FAILED/DEAD',
+    retry_count     INT          NOT NULL DEFAULT 0,
+    next_retry_at   DATETIME     DEFAULT NULL COMMENT '退避后的下次可发送时间，NULL 表示立即可发',
+    last_error      VARCHAR(500) DEFAULT NULL,
+    sent_at         DATETIME     DEFAULT NULL,
+    create_time     DATETIME     NOT NULL,
+    update_time     DATETIME     NOT NULL,
+    PRIMARY KEY (id),
+    KEY idx_notify_user_read (user_id, read_flag, id),
+    KEY idx_notify_delivery (delivery_status, next_retry_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='拍卖通知（站内信 + 外发投递）';

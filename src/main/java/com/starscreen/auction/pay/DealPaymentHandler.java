@@ -11,9 +11,11 @@ import com.starscreen.auction.dto.AuctionDepositEvent;
 import com.starscreen.auction.entity.AuctionDeal;
 import com.starscreen.auction.entity.AuctionPayOrder;
 import com.starscreen.auction.enums.DealStatus;
+import com.starscreen.auction.enums.NotificationType;
 import com.starscreen.auction.enums.PayBizType;
 import com.starscreen.auction.mq.OutboxWriter;
 import com.starscreen.auction.repository.AuctionDealRepository;
+import com.starscreen.auction.service.NotificationService;
 import com.starscreen.auction.support.AuctionAuditWriter;
 
 import lombok.RequiredArgsConstructor;
@@ -48,6 +50,7 @@ public class DealPaymentHandler implements PaymentResultHandler {
     private final AuctionDealRepository dealRepository;
     private final OutboxWriter outboxWriter;
     private final AuctionAuditWriter auditWriter;
+    private final NotificationService notificationService;
 
     @Override
     public PayBizType bizType() {
@@ -92,6 +95,12 @@ public class DealPaymentHandler implements PaymentResultHandler {
         auditWriter.write("DEAL", deal.getId(), deal.getBuyerId(), "USER", "DEAL_PAID",
                 "dealNo=" + deal.getDealNo() + ", amount=" + deal.getDealPrice()
                         + ", payNo=" + order.getPayNo(), null);
+
+        notificationService.notify(deal.getBuyerId(), NotificationType.DEAL_PAID,
+                "成交款已到账",
+                "成交单 " + deal.getDealNo() + " 的成交款 ¥" + deal.getDealPrice()
+                        + " 已支付成功，保证金将按规则原路退回，请留意到账。",
+                "DEAL", deal.getId());
 
         log.info("【拍卖】成交款到账 dealId={} dealNo={} amount={}，已投递保证金退款触发",
                 deal.getId(), deal.getDealNo(), deal.getDealPrice());

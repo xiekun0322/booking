@@ -18,6 +18,8 @@ public final class RoleConstants {
     public static final String VIEW_ADMIN_MOVIES    = "admin_movies";
     public static final String VIEW_ADMIN_SCHEDULES = "admin_schedules";
     public static final String VIEW_ADMIN_ORDERS    = "admin_orders";
+    /** 拍卖管理页：发布拍品、查看各状态、取消排期。 */
+    public static final String VIEW_ADMIN_AUCTION   = "admin-auction";
 
     private RoleConstants() {}
 }

@@ -33,6 +33,27 @@ public interface AuctionDepositRepository extends JpaRepository<AuctionDeposit, 
 
     long countByItemIdAndStatus(Long itemId, DepositStatus status);
 
+    /** 监控：全局按状态计数（{@code REFUND_DEAD} 用它统计，需要人工介入）。 */
+    long countByStatus(DepositStatus status);
+
+    /**
+     * 监控：已到退款时间点、但还没退完的条数。
+     *
+     * <p>把 {@code HELD}（已触发但 worker 还没抢到）与 {@code REFUNDING}（正在退）一起算进来：
+     * 只看其中一个都会漏——触发后状态立刻离开 HELD，只查 HELD 会恒为 0，看起来永远健康。
+     *
+     * <p><b>不包含 REFUND_DEAD</b>：那部分已经放弃自动重试，单独用
+     * {@link #countByStatus} 统计，混在一起会让"积压"这个指标失去告警意义。
+     */
+    @Query("""
+            SELECT COUNT(d) FROM AuctionDeposit d
+             WHERE d.refundTriggerAt IS NOT NULL
+               AND d.refundTriggerAt <= :now
+               AND d.status IN :statuses
+            """)
+    long countRefundBacklog(@Param("statuses") java.util.Collection<DepositStatus> statuses,
+                            @Param("now") LocalDateTime now);
+
     /**
      * 写退款触发时间（消费者调用，决策一 C / 决策二 B 的共同落点）。
      *

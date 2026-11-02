@@ -13,6 +13,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import com.starscreen.auction.config.AuctionProperties;
 import com.starscreen.auction.entity.AuctionDeposit;
+import com.starscreen.auction.enums.NotificationType;
 import com.starscreen.auction.pay.MockPayService;
 import com.starscreen.auction.repository.AuctionDepositRepository;
 
@@ -44,15 +45,18 @@ public class DepositRefundWorker {
     private final AuctionDepositRepository depositRepository;
     private final MockPayService payService;
     private final AuctionProperties properties;
+    private final NotificationService notificationService;
     private final TransactionTemplate tx;
 
     public DepositRefundWorker(AuctionDepositRepository depositRepository,
                                MockPayService payService,
                                AuctionProperties properties,
+                               NotificationService notificationService,
                                @Qualifier("auctionTransactionManager") PlatformTransactionManager auctionTransactionManager) {
         this.depositRepository = depositRepository;
         this.payService = payService;
         this.properties = properties;
+        this.notificationService = notificationService;
         this.tx = new TransactionTemplate(auctionTransactionManager);
         this.tx.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     }
@@ -121,6 +125,15 @@ public class DepositRefundWorker {
 
         // ③ 标记成功（独立事务）
         tx.execute(s -> depositRepository.markRefunded(deposit.getId(), LocalDateTime.now()));
+
+        // 通知在退款已落库之后发：用户收到的第一条信息必须是"钱已经退了"，
+        // 而不是"正在退"——后者会引发大量"为什么还没到账"的追问。
+        notificationService.notify(deposit.getUserId(), NotificationType.DEPOSIT_REFUNDED,
+                "保证金已退回",
+                "您在拍品 #" + deposit.getItemId() + " 缴纳的保证金 ¥" + deposit.getAmount()
+                        + " 已原路退回，请留意原支付渠道到账。",
+                "DEPOSIT", deposit.getId());
+
         log.info("【保证金】退款成功 depositId={} itemId={} userId={} amount={} payNo={}",
                 deposit.getId(), deposit.getItemId(), deposit.getUserId(),
                 deposit.getAmount(), deposit.getPayNo());
